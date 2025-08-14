@@ -28,5 +28,21 @@ module AcquisitionArena
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Load Clerk configuration
+    require Rails.root.join('config/clerk.rb')
+
+    # CORS configuration - disabled in development
+    unless Rails.env.development?
+      config.middleware.use Rack::Cors do
+        allow do
+          origins '*' # Configure this for production with specific domains
+          resource '*',
+            headers: :any,
+            methods: [:get, :post, :put, :patch, :delete, :options, :head],
+            credentials: false
+        end
+      end
+    end
   end
 end
