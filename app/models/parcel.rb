@@ -23,3 +23,15 @@ class Parcel < ApplicationRecord
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: parcels
+#
+#  id                :bigint           not null, primary key
+#  location          :string
+#  parcel_number     :string
+#  property_features :json
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#

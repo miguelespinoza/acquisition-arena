@@ -26,3 +26,17 @@ class Persona < ApplicationRecord
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: personas
+#
+#  id                      :bigint           not null, primary key
+#  avatar_url              :string
+#  characteristics         :json
+#  characteristics_version :integer
+#  description             :text
+#  name                    :string
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#
