@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_14_105211) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_14_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,6 +30,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_14_105211) do
     t.integer "characteristics_version"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "elevenlabs_agent_id"
+    t.text "conversation_prompt"
+    t.json "voice_settings"
+    t.datetime "agent_created_at"
+    t.string "voice_id"
+    t.index ["elevenlabs_agent_id"], name: "index_personas_on_elevenlabs_agent_id", unique: true
   end
 
   create_table "training_sessions", force: :cascade do |t|
