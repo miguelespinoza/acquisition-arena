@@ -32,16 +32,19 @@ module AcquisitionArena
     # Load Clerk configuration
     require Rails.root.join('config/clerk.rb')
 
-    # CORS configuration - disabled in development
-    unless Rails.env.development?
-      config.middleware.use Rack::Cors do
-        allow do
-          origins '*' # Configure this for production with specific domains
-          resource '*',
-            headers: :any,
-            methods: [:get, :post, :put, :patch, :delete, :options, :head],
-            credentials: false
+    # CORS configuration
+    config.middleware.use Rack::Cors do
+      allow do
+        if Rails.env.development?
+          origins '*' # Allow all origins in development
+        else
+          origins ['your-production-domain.com'] # Configure for production
         end
+        
+        resource '*',
+          headers: :any,
+          methods: [:get, :post, :put, :patch, :delete, :options, :head],
+          credentials: false
       end
     end
   end

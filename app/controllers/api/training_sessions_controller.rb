@@ -3,7 +3,7 @@ class Api::TrainingSessionsController < ApplicationController
 
   def index
     sessions = current_user.training_sessions.includes(:persona, :parcel)
-    render json: sessions.map { |session| serialize_session(session) }
+    render json: TrainingSessionBlueprint.render(sessions)
   end
 
   def create
@@ -16,14 +16,14 @@ class Api::TrainingSessionsController < ApplicationController
     
     if session.save
       current_user.decrement!(:sessions_remaining)
-      render json: serialize_session(session), status: :created
+      render json: TrainingSessionBlueprint.render(session), status: :created
     else
       render json: { errors: session.errors }, status: :unprocessable_entity
     end
   end
 
   def show
-    render json: serialize_session(@training_session)
+    render json: TrainingSessionBlueprint.render(@training_session, view: :detailed)
   end
 
   def complete
@@ -36,7 +36,7 @@ class Api::TrainingSessionsController < ApplicationController
 
     # TODO: Trigger background grading job
     
-    render json: serialize_session(@training_session)
+    render json: TrainingSessionBlueprint.render(@training_session, view: :detailed)
   end
 
   private
@@ -47,18 +47,5 @@ class Api::TrainingSessionsController < ApplicationController
 
   def session_params
     params.require(:training_session).permit(:persona_id, :parcel_id)
-  end
-
-  def serialize_session(session)
-    {
-      id: session.id,
-      status: session.status,
-      persona: session.persona&.slice(:id, :name, :avatar_url),
-      parcel: session.parcel&.slice(:id, :parcel_number, :location),
-      grade_stars: session.grade_stars,
-      feedback_markdown: session.feedback_markdown,
-      session_duration: session.session_duration,
-      created_at: session.created_at
-    }
   end
 end

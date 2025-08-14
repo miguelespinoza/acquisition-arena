@@ -39,6 +39,10 @@ gem "rack-cors"
 gem "clerk-sdk-ruby", require: "clerk"
 gem "jwt"
 
+# JSON serialization
+gem "blueprinter"
+gem "oj"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"

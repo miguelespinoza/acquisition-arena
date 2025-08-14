@@ -1,12 +1,7 @@
 class Api::UsersController < ApplicationController
 
   def profile
-    render json: {
-      id: current_user.id,
-      clerk_user_id: current_user.clerk_user_id,
-      sessions_remaining: current_user.sessions_remaining,
-      invite_code_redeemed: current_user.invite_code_redeemed
-    }
+    render json: UserBlueprint.render(current_user)
   end
 
   def validate_invite
