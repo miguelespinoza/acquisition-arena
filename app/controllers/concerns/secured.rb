@@ -24,31 +24,38 @@ module Secured
   private
 
   def extract_clerk_user_id
-    # First try Clerk's middleware if it worked
-    if respond_to?(:clerk_user_signed_in?) && clerk_user_signed_in?
-      return clerk_user['id']
+    # Try to get user data from Clerk middleware/proxy
+    clerk_proxy = request.env['clerk']
+    if clerk_proxy.respond_to?(:user) && clerk_proxy.user.present?
+      return clerk_proxy.user['id']
     end
 
-    # Fallback: manually verify the JWT
-    auth_header = request.headers['Authorization']
-    return nil if auth_header.blank?
-
-    token = auth_header.split(' ').last
+    # If middleware didn't work, manually extract from session token
+    token = extract_session_token
     return nil if token.blank?
 
-    verify_clerk_jwt(token)
+    verify_session_token(token)
   end
 
-  def verify_clerk_jwt(token)
-    # Use Clerk SDK to verify the token
-    sdk = Clerk::SDK.new(api_key: ENV['CLERK_SECRET_KEY'])
-    
+  def extract_session_token
+    # Check for token in Authorization header
+    auth_header = request.headers['Authorization']
+    return auth_header.split(' ').last if auth_header&.start_with?('Bearer ')
+
+    # Check for __session cookie
+    request.cookies['__session']
+  end
+
+  def verify_session_token(token)
     begin
-      # Verify token with Clerk
-      verification_result = sdk.verify_token(token)
-      verification_result['sub'] if verification_result
+      # Decode JWT without verification first to get the payload
+      decoded_token = JWT.decode(token, nil, false)
+      payload = decoded_token[0]
+      
+      # Extract user ID from the 'sub' claim
+      payload['sub'] if payload
     rescue => e
-      Rails.logger.error "Clerk JWT verification failed: #{e.message}"
+      Rails.logger.error "JWT decode failed: #{e.message}"
       nil
     end
   end

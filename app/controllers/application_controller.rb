@@ -1,7 +1,4 @@
-require 'clerk/authenticatable'
-
 class ApplicationController < ActionController::API
-  include Clerk::Authenticatable
   include Secured
 
   before_action :ensure_authenticated
