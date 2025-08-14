@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  clerk_user_id: MyString
+  sessions_remaining: 1
+  invite_code: MyString
+  invite_code_redeemed: false
+
+two:
+  clerk_user_id: MyString
+  sessions_remaining: 1
+  invite_code: MyString
+  invite_code_redeemed: false

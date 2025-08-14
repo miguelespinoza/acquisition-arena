@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  persona: one
+  parcel: one
+  conversation_transcript: MyText
+  audio_url: MyString
+  grade_stars: 1
+  feedback_markdown: MyText
+  session_duration: 1
+  elevenlabs_session_token: MyString
+  status: MyString
+
+two:
+  user: two
+  persona: two
+  parcel: two
+  conversation_transcript: MyText
+  audio_url: MyString
+  grade_stars: 1
+  feedback_markdown: MyText
+  session_duration: 1
+  elevenlabs_session_token: MyString
+  status: MyString
