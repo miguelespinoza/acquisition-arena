@@ -56,3 +56,8 @@ group :development, :test do
   # Load environment variables from .env file
   gem "dotenv-rails"
 end
+
+group :development do
+  # Add schema information in comments to models
+  gem "annotaterb"
+end
