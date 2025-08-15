@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
-import AppPage from './pages/AppPage'
+import HomePage from './pages/HomePage'
 import CreateSessionPage from './pages/CreateSessionPage'
 import SessionPage from './pages/SessionPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -16,11 +16,7 @@ function App() {
           <Route path="/signup/*" element={<SignUpPage />} />
           <Route 
             path="/" 
-            element={
-              <ProtectedRoute>
-                <AppPage />
-              </ProtectedRoute>
-            } 
+            element={<HomePage />} 
           />
           <Route 
             path="/create-session" 
