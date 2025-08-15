@@ -2,15 +2,20 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useSWR from 'swr'
 import { useApiClient } from '@/lib/api'
 import type { TrainingSession } from '@/types'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getPersonaAvatar } from '@/utils/avatar'
+import { useElevenLabsConversation } from '@/hooks/useElevenLabsConversation'
+import { WaveformVisualizer } from '@/components/WaveformVisualizer'
+import { Settings, User, MapPin, BarChart3, X, PhoneOff, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const apiClient = useApiClient()
-  const [isRinging, setIsRinging] = useState(true)
-  const [callConnected, setCallConnected] = useState(false)
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+  const [volume, setVolume] = useState(0.8)
+  const [hasAttemptedConnection, setHasAttemptedConnection] = useState(false)
 
   // Fetch session details
   const { data: session, error, isLoading } = useSWR<TrainingSession>(
@@ -18,20 +23,111 @@ export default function SessionPage() {
     () => apiClient.get<TrainingSession>(`/training_sessions/${id}`)
   )
 
-  // Ring animation effect
-  useEffect(() => {
-    if (session) {
-      const timer = setTimeout(() => {
-        setIsRinging(false)
-        setCallConnected(true)
-      }, 3000) // Ring for 3 seconds, then "connect"
-
-      return () => clearTimeout(timer)
+  // ElevenLabs conversation hook
+  const {
+    startConversation,
+    endConversation,
+    setVolume: setConversationVolume,
+    status: conversationStatus,
+    isSpeaking,
+    isConnecting,
+    metrics,
+    cleanup
+  } = useElevenLabsConversation({
+    onConnect: () => {
+      console.log('Voice conversation connected')
+      setVoiceError(null)
+      toast.success('Connected! Start speaking to begin the conversation.')
+    },
+    onDisconnect: () => {
+      console.log('Voice conversation ended')
+      toast.success('Training session completed!')
+    },
+    onError: (error) => {
+      console.error('Voice conversation error:', error)
+      setVoiceError(error.message)
+      toast.error(error.message)
     }
-  }, [session])
+  })
 
-  const handleEndSession = () => {
+  // Auto-start conversation when session is loaded and pending (only once)
+  useEffect(() => {
+    console.log('SessionPage: useEffect triggered with conditions:', {
+      session: session ? {
+        id: session.id,
+        status: session.status,
+        personaName: session.persona?.name
+      } : null,
+      id,
+      conversationStatus,
+      hasAttemptedConnection
+    })
+
+    if (session && session.status === 'pending' && id && conversationStatus === 'disconnected' && !hasAttemptedConnection) {
+      console.log('SessionPage: All conditions met, setting hasAttemptedConnection to true')
+      setHasAttemptedConnection(true)
+      // Small delay to let UI render
+      const timer = setTimeout(() => {
+        console.log('SessionPage: Starting conversation with ID:', id)
+        startConversation(id)
+      }, 1000)
+      return () => {
+        console.log('SessionPage: Clearing conversation start timer')
+        clearTimeout(timer)
+      }
+    } else {
+      console.log('SessionPage: Conditions not met for starting conversation:', {
+        hasSession: !!session,
+        sessionStatus: session?.status,
+        hasId: !!id,
+        conversationStatus,
+        hasAttemptedConnection
+      })
+    }
+  }, [session, id, conversationStatus, startConversation, hasAttemptedConnection])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanup()
+    }
+  }, [cleanup])
+
+  const handleEndSession = useCallback(async () => {
+    if (conversationStatus === 'connected') {
+      const confirmed = window.confirm(
+        'Are you sure you want to end this training session? Your progress will be saved.'
+      )
+      if (!confirmed) return
+      
+      await endConversation()
+    }
     navigate('/')
+  }, [conversationStatus, endConversation, navigate])
+
+  const handleVolumeChange = useCallback((newVolume: number) => {
+    setVolume(newVolume)
+    setConversationVolume(newVolume)
+  }, [setConversationVolume])
+
+  const formatDuration = (ms: number): string => {
+    const seconds = Math.floor(ms / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  const getStatusDisplay = () => {
+    if (conversationStatus === 'connecting' || isConnecting) {
+      return 'Connecting...'
+    }
+    if (conversationStatus === 'connected') {
+      return isSpeaking ? 'AI Speaking' : 'Listening'
+    }
+    if (conversationStatus === 'disconnected' && session?.status === 'pending') {
+      return 'Starting...'
+    }
+    return 'Waiting'
   }
 
   if (isLoading) {
@@ -91,7 +187,20 @@ export default function SessionPage() {
           {/* Call Interface */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-              {isRinging ? (
+              {!hasAttemptedConnection && session?.status === 'pending' ? (
+                <div className="space-y-6">
+                  <div className="flex justify-center">
+                    <div className="w-32 h-32 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                      <Settings className="w-16 h-16 text-white animate-spin" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-3xl font-bold text-gray-900">🎯 Preparing Session</h2>
+                    <p className="text-xl text-gray-600">Setting up voice conversation with {session.persona?.name}...</p>
+                    <p className="text-gray-500">Please allow microphone access when prompted</p>
+                  </div>
+                </div>
+              ) : conversationStatus === 'connecting' || isConnecting ? (
                 <div className="space-y-6">
                   {/* Persona Avatar with pulse rings */}
                   <div className="flex justify-center relative">
@@ -115,50 +224,128 @@ export default function SessionPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-bold text-gray-900">Ring Ring Ring! 📞</h2>
+                    <h2 className="text-3xl font-bold text-gray-900">📞 Connecting...</h2>
                     <p className="text-xl text-gray-600">Calling {session.persona?.name}...</p>
-                    <p className="text-gray-500">Connecting to voice session</p>
+                    <p className="text-gray-500">Setting up voice conversation</p>
                   </div>
                 </div>
-              ) : callConnected ? (
+              ) : conversationStatus === 'connected' ? (
                 <div className="space-y-6">
-                  {/* Persona Avatar */}
-                  <div className="flex justify-center">
+                  {/* Persona Avatar with speaking indicator */}
+                  <div className="flex justify-center relative">
                     {session.persona && (session.persona.avatarUrl || getPersonaAvatar(session.persona.id)) ? (
                       <img
                         src={session.persona.avatarUrl || getPersonaAvatar(session.persona.id)!}
                         alt={session.persona.name}
-                        className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                        className={`w-32 h-32 rounded-full object-cover border-4 shadow-lg transition-all duration-300 ${
+                          isSpeaking ? 'border-green-400 scale-105' : 'border-white'
+                        }`}
                       />
                     ) : (
-                      <div className="w-32 h-32 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                      <div className={`w-32 h-32 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center border-4 shadow-lg transition-all duration-300 ${
+                        isSpeaking ? 'border-green-400 scale-105' : 'border-white'
+                      }`}>
                         <span className="text-white font-semibold text-3xl">
                           {session.persona?.name.charAt(0)}
                         </span>
                       </div>
                     )}
-                  </div>
-                  <div className="space-y-4">
-                    <h2 className="text-3xl font-bold text-gray-900">Connected! 🎉</h2>
-                    <p className="text-xl text-gray-600">You're now talking with {session.persona?.name}</p>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
-                      <p className="text-yellow-800 font-medium">⚡ Voice Integration Coming Soon</p>
-                      <p className="text-yellow-600 text-sm mt-1">
-                        Voice conversation with AI personas will be available in the next update
-                      </p>
-                    </div>
+                    {/* Speaking indicator */}
+                    {isSpeaking && (
+                      <div className="absolute inset-0 w-32 h-32 mx-auto">
+                        <div className="absolute inset-0 rounded-full border-4 border-green-400 animate-pulse"></div>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Placeholder Controls */}
+                  <div className="space-y-4">
+                    <h2 className="text-3xl font-bold text-gray-900">🎉 Live Conversation</h2>
+                    <p className="text-xl text-gray-600">Speaking with {session.persona?.name}</p>
+                    <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                      isSpeaking ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {isSpeaking ? '🗣️ AI Speaking' : '👂 Listening'}
+                    </div>
+                    
+                    {/* Waveform Visualizer */}
+                    <div className="my-4">
+                      <WaveformVisualizer 
+                        isActive={isSpeaking} 
+                        height={50} 
+                        barCount={8}
+                        color={isSpeaking ? '#10B981' : '#6B7280'}
+                        className="mb-2"
+                      />
+                    </div>
+                    
+                    {/* Session Metrics */}
+                    {metrics.startTime && (
+                      <div className="text-sm text-gray-600">
+                        Duration: {formatDuration(metrics.duration)} | Messages: {metrics.messageCount}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Volume Control */}
+                  <div className="max-w-xs mx-auto">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Volume: {Math.round(volume * 100)}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                  
+                  {/* End Call Button */}
                   <div className="flex justify-center mt-8">
-                    <button className="p-4 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                    <button 
+                      onClick={handleEndSession}
+                      className="p-4 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors group"
+                      title="End training session"
+                    >
+                      <PhoneOff className="w-6 h-6" />
                     </button>
                   </div>
                 </div>
-              ) : null}
+              ) : voiceError ? (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="w-16 h-16 text-red-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Connection Error</h2>
+                    <p className="text-gray-600 mb-4">{voiceError}</p>
+                    <button
+                      onClick={() => {
+                        if (id) {
+                          setHasAttemptedConnection(false)
+                          setVoiceError(null)
+                          startConversation(id)
+                        }
+                      }}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <X className="w-16 h-16 text-gray-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Session Ended</h2>
+                    <p className="text-gray-600">Training session has been completed.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -167,9 +354,7 @@ export default function SessionPage() {
             {/* Persona Card */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <User className="w-5 h-5 mr-2 text-purple-600" />
                 Seller Persona
               </h3>
               <div className="space-y-3">
@@ -211,9 +396,7 @@ export default function SessionPage() {
             {/* Parcel Card */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+                <MapPin className="w-5 h-5 mr-2 text-green-600" />
                 Property Details
               </h3>
               <div className="space-y-3">
@@ -237,9 +420,7 @@ export default function SessionPage() {
             {/* Session Status */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+                <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
                 Session Info
               </h3>
               <div className="space-y-2">
@@ -262,7 +443,17 @@ export default function SessionPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Duration:</span>
                   <span className="text-gray-900 font-medium">
-                    {isRinging ? 'Connecting...' : callConnected ? 'In Progress' : 'N/A'}
+                    {metrics.startTime ? formatDuration(metrics.duration) : getStatusDisplay()}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Voice Status:</span>
+                  <span className={`font-medium capitalize ${
+                    conversationStatus === 'connected' ? 'text-green-600' : 
+                    conversationStatus === 'connecting' ? 'text-yellow-600' : 
+                    'text-gray-600'
+                  }`}>
+                    {getStatusDisplay()}
                   </span>
                 </div>
               </div>

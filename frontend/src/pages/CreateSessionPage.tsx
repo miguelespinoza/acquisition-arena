@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { useApiClient } from '@/lib/api'
 import type { Persona, Parcel, TrainingSession } from '@/types'
 import toast from 'react-hot-toast'
-import { Phone } from 'lucide-react'
+import { Phone, ChevronLeft, PlayCircle, Loader2 } from 'lucide-react'
 import { getPersonaAvatar } from '@/utils/avatar'
 
 type Step = 'persona' | 'parcel' | 'confirm'
@@ -82,9 +82,7 @@ export default function CreateSessionPage() {
               onClick={handleBack}
               className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-6 h-6" />
             </button>
             <h1 className="text-3xl font-bold text-gray-900">Create Training Session</h1>
           </div>
@@ -214,9 +212,7 @@ export default function CreateSessionPage() {
                 >
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
+                      <Phone className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="ml-3 text-xl font-semibold text-gray-900">Parcel #{parcel.parcelNumber}</h3>
                   </div>
@@ -277,9 +273,7 @@ export default function CreateSessionPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Property</h3>
                   <div className="flex items-center mb-4">
                     <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
+                      <PlayCircle className="w-8 h-8 text-white" />
                     </div>
                     <div className="ml-4">
                       <h4 className="text-xl font-semibold text-gray-900">Parcel #{selectedParcel.parcelNumber}</h4>
@@ -308,10 +302,7 @@ export default function CreateSessionPage() {
                 >
                   {isCreating ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
+                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                       Creating Session...
                     </>
                   ) : (
