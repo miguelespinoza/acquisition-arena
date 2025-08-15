@@ -1,3 +1,4 @@
+# ElevenLabs prompt templates for personas
 module Prompts
   # Base persona prompt template for ElevenLabs agents
   PERSONA_BASE_PROMPT = <<~PROMPT
