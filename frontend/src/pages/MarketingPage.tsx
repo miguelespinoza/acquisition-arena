@@ -1,22 +1,19 @@
-import { useAuth, useUser } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
-import { Phone, User, MapPin, BarChart3 } from 'lucide-react'
+import { User, MapPin, BarChart3 } from 'lucide-react'
 
-export default function AppPage() {
-  const { signOut } = useAuth()
-  const { user } = useUser()
+export default function MarketingPage() {
   const navigate = useNavigate()
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Failed to sign out:', error)
-    }
+  const handleStartNewSession = () => {
+    navigate('/login')
   }
 
-  const handleStartNewSession = () => {
-    navigate('/create-session')
+  const handleLogin = () => {
+    navigate('/login')
+  }
+
+  const handleSignUp = () => {
+    navigate('/signup')
   }
 
   return (
@@ -31,36 +28,42 @@ export default function AppPage() {
             <div>
               <h1 className="text-xl font-bold text-gray-900">Land Acquisition Arena</h1>
               <p className="text-xs text-gray-600">
-                Hello, {user?.firstName || user?.emailAddresses[0]?.emailAddress}!
+                Master land deals through AI roleplay
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            Logout
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleLogin}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Login
+            </button>
+            <button
+              onClick={handleSignUp}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
-
 
         {/* Call-to-Action */}
         <div className="bg-white rounded-2xl shadow-xl p-8 text-center mb-8 mt-10">
           <h3 className="text-4xl font-bold text-gray-900 mb-3">
-            Ready to Start Training?
+            Master Land Deals That Actually Close
           </h3>
           
           <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            Perfect for beginner investors just getting started. Get those reps in and 
-            build confidence through realistic AI-powered roleplay sessions.
+            Stop losing deals to awkward phone calls. Practice with AI sellers until you can 
+            confidently negotiate any land acquisition. Join hundreds of investors closing more deals.
           </p>
           
           <button
             onClick={handleStartNewSession}
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold text-lg rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+            className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold text-lg rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            <Phone className="w-6 h-6 mr-2" fill="white" strokeWidth={0} />
-            Start New Session
+            Start Free Training
           </button>
         </div>
 
