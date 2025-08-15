@@ -67,3 +67,5 @@ group :development do
   # Add schema information in comments to models
   gem "annotaterb"
 end
+
+gem "dockerfile-rails", ">= 1.7", :group => :development
