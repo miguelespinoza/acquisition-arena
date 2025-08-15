@@ -7,8 +7,6 @@ export interface TrainingSession {
   personaId: number
   parcelId: number
   status: 'pending' | 'active' | 'completed' | 'failed'
-  gradeStars: number | null
-  feedbackMarkdown: string | null
   conversationTranscript: string | null
   sessionDuration: number | null
   audioUrl: string | null

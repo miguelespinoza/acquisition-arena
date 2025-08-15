@@ -6,8 +6,6 @@ one:
   parcel: one
   conversation_transcript: MyText
   audio_url: MyString
-  grade_stars: 1
-  feedback_markdown: MyText
   session_duration: 1
   elevenlabs_session_token: MyString
   status: MyString
@@ -18,8 +16,6 @@ two:
   parcel: two
   conversation_transcript: MyText
   audio_url: MyString
-  grade_stars: 1
-  feedback_markdown: MyText
   session_duration: 1
   elevenlabs_session_token: MyString
   status: MyString

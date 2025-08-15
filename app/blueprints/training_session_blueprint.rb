@@ -3,7 +3,7 @@
 class TrainingSessionBlueprint < Blueprinter::Base
   identifier :id
 
-  fields :status, :grade_stars, :feedback_markdown, :session_duration, :conversation_transcript, :audio_url, :elevenlabs_session_token, :created_at, :updated_at
+  fields :status, :session_duration, :conversation_transcript, :audio_url, :elevenlabs_session_token, :created_at, :updated_at
 
   association :persona, blueprint: PersonaBlueprint
   association :parcel, blueprint: ParcelBlueprint

@@ -10,19 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_14_130000) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_14_165519) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pgcrypto"
 
-  create_table "parcels", force: :cascade do |t|
+  create_table "parcels", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "parcel_number"
     t.string "location"
     t.json "property_features"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["id"], name: "index_parcels_on_id", unique: true
   end
 
-  create_table "personas", force: :cascade do |t|
+  create_table "personas", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name"
     t.text "description"
     t.string "avatar_url"
@@ -36,12 +38,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_14_130000) do
     t.datetime "agent_created_at"
     t.string "voice_id"
     t.index ["elevenlabs_agent_id"], name: "index_personas_on_elevenlabs_agent_id", unique: true
+    t.index ["id"], name: "index_personas_on_id", unique: true
   end
 
-  create_table "training_sessions", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "persona_id", null: false
-    t.bigint "parcel_id", null: false
+  create_table "training_sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "conversation_transcript"
     t.string "audio_url"
     t.integer "grade_stars"
@@ -51,18 +51,23 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_14_130000) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.uuid "persona_id", null: false
+    t.uuid "parcel_id", null: false
+    t.index ["id"], name: "index_training_sessions_on_id", unique: true
     t.index ["parcel_id"], name: "index_training_sessions_on_parcel_id"
     t.index ["persona_id"], name: "index_training_sessions_on_persona_id"
     t.index ["user_id"], name: "index_training_sessions_on_user_id"
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "clerk_user_id"
     t.integer "sessions_remaining"
     t.string "invite_code"
     t.boolean "invite_code_redeemed"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["id"], name: "index_users_on_id", unique: true
   end
 
   add_foreign_key "training_sessions", "parcels"

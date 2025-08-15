@@ -34,7 +34,6 @@ class Api::TrainingSessionsController < ApplicationController
       audio_url: params[:audio_url]
     )
 
-    # TODO: Trigger background grading job
     
     render json: TrainingSessionBlueprint.render(@training_session)
   end
