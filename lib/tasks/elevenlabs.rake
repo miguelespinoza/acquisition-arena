@@ -96,7 +96,18 @@ namespace :elevenlabs do
         next
       end
       
-      # Clear existing agent data
+      # Delete existing agent from ElevenLabs
+      print "Deleting old agent from ElevenLabs... "
+      service = ElevenLabsAgentService.new
+      delete_result = service.delete_agent(persona.elevenlabs_agent_id)
+      
+      if delete_result[:success]
+        puts "✅ Deleted"
+      else
+        puts "⚠️ Warning: #{delete_result[:error]}"
+      end
+      
+      # Clear existing agent data from database
       persona.update!(
         elevenlabs_agent_id: nil,
         voice_id: nil,
@@ -114,6 +125,74 @@ namespace :elevenlabs do
     rescue StandardError => e
       puts "❌ Failed to create agent: #{e.message}"
     end
+  end
+  
+  desc "Recreate all ElevenLabs agents (delete and create fresh)"
+  task recreate_all_agents: :environment do
+    puts "🎭 Recreating ALL ElevenLabs agents..."
+    
+    personas_with_agents = Persona.where.not(elevenlabs_agent_id: nil)
+    total_personas = Persona.count
+    
+    puts "📝 Found #{total_personas} total personas (#{personas_with_agents.count} with existing agents)"
+    
+    print "\n⚠️  This will DELETE all existing agents and create fresh ones. Continue? (y/N): "
+    response = STDIN.gets.chomp.downcase
+    
+    unless ['y', 'yes'].include?(response)
+      puts "❌ Aborted."
+      next
+    end
+    
+    puts "\n🚀 Starting recreation process..."
+    
+    recreated_count = 0
+    failed_count = 0
+    
+    Persona.find_each do |persona|
+      print "Recreating agent for #{persona.name}... "
+      
+      begin
+        # Delete existing agent from ElevenLabs if it exists
+        if persona.has_elevenlabs_agent?
+          print "deleting old agent... "
+          service = ElevenLabsAgentService.new
+          delete_result = service.delete_agent(persona.elevenlabs_agent_id)
+          
+          unless delete_result[:success]
+            puts "❌ Failed to delete old agent: #{delete_result[:error]}"
+            failed_count += 1
+            next
+          end
+        end
+        
+        # Clear existing agent data from database
+        persona.update!(
+          elevenlabs_agent_id: nil,
+          voice_id: nil,
+          conversation_prompt: nil,
+          voice_settings: nil,
+          agent_created_at: nil
+        )
+        
+        print "creating new agent... "
+        # Create new agent
+        persona.create_elevenlabs_agent!
+        puts "✅ Created (Agent ID: #{persona.elevenlabs_agent_id})"
+        recreated_count += 1
+      rescue StandardError => e
+        puts "❌ Failed: #{e.message}"
+        failed_count += 1
+      end
+      
+      # Small delay to avoid rate limiting
+      sleep(1)
+    end
+    
+    puts "\n📊 Recreation Summary:"
+    puts "  ✅ Successfully recreated: #{recreated_count}"
+    puts "  ❌ Failed: #{failed_count}"
+    puts "  📈 Total processed: #{recreated_count + failed_count}"
   end
   
   desc "Test ElevenLabs API connection"
