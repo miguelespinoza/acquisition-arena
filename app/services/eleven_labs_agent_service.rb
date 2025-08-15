@@ -30,10 +30,12 @@ class ElevenLabsAgentService
           voice_settings: agent_config[:conversation_config][:tts][:voice_settings]
         }
       else
-        Rails.logger.error "ElevenLabs API error: #{response.code} - #{response.body}"
-        Rails.logger.error "Request URL: #{self.class.base_uri}/convai/agents/create"
-        Rails.logger.error "Request headers: #{headers}"
-        Rails.logger.error "Request body: #{agent_config.to_json}"
+        Rails.logger.error('elevenlabs_agent_creation_failed',
+          status_code: response.code,
+          response_body: response.body,
+          request_url: "#{self.class.base_uri}/convai/agents/create",
+          persona_name: agent_config[:name]
+        )
         {
           success: false,
           error: "API request failed: #{response.code} - #{response.message}"
@@ -41,7 +43,49 @@ class ElevenLabsAgentService
       end
       
     rescue StandardError => e
-      Rails.logger.error "ElevenLabs agent creation error: #{e.message}"
+      Rails.logger.error('elevenlabs_agent_creation_error',
+        error: e.message,
+        backtrace: e.backtrace&.first(3)
+      )
+      {
+        success: false,
+        error: e.message
+      }
+    end
+  end
+
+  def delete_agent(agent_id)
+    begin
+      # Delete agent via ElevenLabs API
+      response = self.class.delete(
+        "/convai/agents/#{agent_id}",
+        headers: headers
+      )
+      
+      if response.success? || response.code == 404
+        # Consider both success and 404 (already deleted) as successful
+        {
+          success: true,
+          message: response.code == 404 ? "Agent already deleted" : "Agent deleted successfully"
+        }
+      else
+        Rails.logger.error('elevenlabs_agent_deletion_failed',
+          status_code: response.code,
+          response_body: response.body,
+          agent_id: agent_id
+        )
+        {
+          success: false,
+          error: "Failed to delete agent: #{response.code} - #{response.message}"
+        }
+      end
+      
+    rescue StandardError => e
+      Rails.logger.error('elevenlabs_agent_deletion_error',
+        error: e.message,
+        backtrace: e.backtrace&.first(3),
+        agent_id: agent_id
+      )
       {
         success: false,
         error: e.message
@@ -69,7 +113,11 @@ class ElevenLabsAgentService
           signed_url: token_data['token']
         }
       else
-        Rails.logger.error "ElevenLabs conversation token error: #{response.code} - #{response.body}"
+        Rails.logger.error('elevenlabs_token_request_failed',
+          status_code: response.code,
+          response_body: response.body,
+          agent_id: agent_id
+        )
         {
           success: false,
           error: "Failed to get conversation token: #{response.code}"
@@ -77,7 +125,11 @@ class ElevenLabsAgentService
       end
       
     rescue StandardError => e
-      Rails.logger.error "ElevenLabs conversation token error: #{e.message}"
+      Rails.logger.error('elevenlabs_token_error',
+        error: e.message,
+        backtrace: e.backtrace&.first(3),
+        agent_id: agent_id
+      )
       {
         success: false,
         error: e.message
@@ -111,7 +163,10 @@ class ElevenLabsAgentService
       "21m00Tcm4TlvDq8ikWAM" # Rachel - reliable fallback
     end
   rescue StandardError => e
-    Rails.logger.warn "Voice selection failed for persona #{persona.name}: #{e.message}"
+    Rails.logger.warn('voice_selection_failed',
+      persona: persona.name,
+      error: e.message
+    )
     # Fallback to Rachel if voice selection fails
     "21m00Tcm4TlvDq8ikWAM"
   end
@@ -137,6 +192,7 @@ class ElevenLabsAgentService
           prompt: {
             prompt: prompt
           },
+          first_message: generate_first_message(persona),
           language: "en"
         },
         tts: {
@@ -257,6 +313,49 @@ class ElevenLabsAgentService
     styles.join('. ')
   end
   
+  def generate_first_message(persona)
+    characteristics = persona.characteristics
+    chattiness = characteristics['chattiness_level']
+    temper = characteristics['temper_level']
+    
+    # Generate a greeting based on persona characteristics
+    greeting_options = if chattiness > 0.7
+      # Very chatty personas
+      [
+        "Hi there! I heard you might be interested in my property. I'm #{persona.name}, and I'd love to tell you all about it!",
+        "Hello! Thanks for calling about my land. I'm #{persona.name}, and boy do I have some stories about this property!",
+        "Hey! I'm so glad you reached out. I'm #{persona.name}, and I've been hoping to find the right buyer for my place."
+      ]
+    elsif chattiness > 0.3
+      # Moderately talkative personas
+      [
+        "Hello, this is #{persona.name}. I understand you're interested in my property?",
+        "Hi, I'm #{persona.name}. Thanks for reaching out about my land.",
+        "Hello there! I'm #{persona.name}. So you're looking at buying my property?"
+      ]
+    else
+      # Quiet personas
+      [
+        "Hello. #{persona.name} speaking.",
+        "Hi. This is #{persona.name}.",
+        "Hello. You called about my property?"
+      ]
+    end
+    
+    # Adjust tone based on temper
+    selected_greeting = greeting_options.sample
+    
+    if temper > 0.7
+      # Add some edge for high-temper personas
+      selected_greeting += " I hope you're serious about this - I don't have time for tire kickers."
+    elsif temper < 0.3
+      # Add warmth for calm personas
+      selected_greeting += " I'm happy to answer any questions you might have."
+    end
+    
+    selected_greeting
+  end
+
   def generate_voice_settings(persona)
     characteristics = persona.characteristics
     

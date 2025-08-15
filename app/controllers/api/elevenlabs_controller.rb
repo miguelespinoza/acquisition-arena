@@ -42,21 +42,36 @@ class Api::ElevenlabsController < ApplicationController
     user_id = current_user.clerk_user_id || current_user.id.to_s
     
     # Log the session creation attempt
-    Rails.logger.info "Creating ElevenLabs session for persona: #{persona.name}, agent: #{persona.elevenlabs_agent_id}"
+    logger.info('elevenlabs_session_start', 
+      persona: persona.name, 
+      agent_id: persona.elevenlabs_agent_id,
+      training_session_id: training_session.id
+    )
     
     # Create conversation session using ElevenLabs service
     service = ElevenLabsAgentService.new
     result = service.create_conversation_session(persona.elevenlabs_agent_id, user_id)
     
     if result[:success]
-      Rails.logger.info "Successfully created ElevenLabs session: #{result[:conversation_id]}"
+      logger.info('elevenlabs_session_created', 
+        conversation_id: result[:conversation_id],
+        persona: persona.name
+      )
     else
-      Rails.logger.error "Failed to create ElevenLabs session: #{result[:error]}"
+      logger.error('elevenlabs_session_failed', 
+        error: result[:error],
+        persona: persona.name,
+        agent_id: persona.elevenlabs_agent_id
+      )
     end
     
     result
   rescue StandardError => e
-    Rails.logger.error "ElevenLabs session creation error: #{e.message}"
+    logger.error('elevenlabs_session_error', 
+      error: e.message,
+      backtrace: e.backtrace&.first(3),
+      persona: persona.name
+    )
     {
       success: false,
       error: "Failed to create voice session: #{e.message}"

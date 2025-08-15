@@ -61,6 +61,23 @@ Rails.application.configure do
 
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
+  
+  # Disable Rails default file logger and configure semantic logger
+  config.rails_semantic_logger.add_file_appender = false
+  
+  # Add colorized console output for development readability
+  config.semantic_logger.add_appender(
+    io: $stdout,
+    formatter: :color,
+    level: :info
+  )
+  
+  # Optionally add JSON file for development testing
+  config.semantic_logger.add_appender(
+    file_name: 'log/development.json',
+    formatter: :json,
+    level: :info
+  )
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true

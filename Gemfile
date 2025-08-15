@@ -45,6 +45,10 @@ gem "oj"
 
 gem "httparty"
 
+# Structured logging with JSON format
+gem "rails_semantic_logger"
+gem "amazing_print"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"

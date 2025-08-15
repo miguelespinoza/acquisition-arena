@@ -32,6 +32,19 @@ module AcquisitionArena
     # Load Clerk configuration
     require Rails.root.join('config/clerk.rb')
 
+    # Semantic Logger configuration
+    config.semantic_logger.application = 'acquisition_arena'
+    config.semantic_logger.environment = Rails.env
+    
+    # In production, use JSON format to stdout
+    if Rails.env.production?
+      config.rails_semantic_logger.add_file_appender = false
+      config.semantic_logger.add_appender(
+        io: $stdout,
+        formatter: :json
+      )
+    end
+
     # CORS configuration
     config.middleware.use Rack::Cors do
       allow do
