@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-react'
 import type { UserProfile, Persona, Parcel, TrainingSession } from '@/types'
 
-const API_BASE_URL = 'http://localhost:3000/api'
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`
 
 // Re-export types for convenience
 export type { UserProfile, Persona, Parcel, TrainingSession }
