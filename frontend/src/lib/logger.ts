@@ -3,6 +3,7 @@
 
 export enum Events {
   // Events will be added here as needed
+  PLACEHOLDER = 'placeholder'
 }
 
 export const logEvent = (event: Events, properties: Record<string, unknown> = {}) => {
