@@ -15,7 +15,7 @@ export function WaveformVisualizer({
   color = '#10B981',
   className = ''
 }: WaveformVisualizerProps) {
-  const [bars, setBars] = useState<number[]>(Array(barCount).fill(0.2))
+  const [bars, setBars] = useState<number[]>(new Array(barCount).fill(0.2))
   const intervalRef = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
