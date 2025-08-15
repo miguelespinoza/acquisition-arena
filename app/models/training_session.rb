@@ -31,8 +31,6 @@ end
 #  audio_url                :string
 #  conversation_transcript  :text
 #  elevenlabs_session_token :string
-#  feedback_markdown        :text
-#  grade_stars              :integer
 #  session_duration         :integer
 #  status                   :string
 #  created_at               :datetime         not null
