@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useSWR from 'swr'
 import { useApiClient } from '@/lib/api'
 import type { TrainingSession } from '@/types'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getPersonaAvatar } from '@/utils/avatar'
 import { useElevenLabsConversation } from '@/hooks/useElevenLabsConversation'
 import { WaveformVisualizer } from '@/components/WaveformVisualizer'
@@ -15,7 +15,7 @@ export default function SessionPage() {
   const apiClient = useApiClient()
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [volume, setVolume] = useState(0.8)
-  const [hasAttemptedConnection, setHasAttemptedConnection] = useState(false)
+  const hasAttemptedConnection = useRef(false)
 
   // Fetch session details
   const { data: session, error, isLoading } = useSWR<TrainingSession>(
@@ -52,39 +52,17 @@ export default function SessionPage() {
 
   // Auto-start conversation when session is loaded and pending (only once)
   useEffect(() => {
-    console.log('SessionPage: useEffect triggered with conditions:', {
-      session: session ? {
-        id: session.id,
-        status: session.status,
-        personaName: session.persona?.name
-      } : null,
-      id,
-      conversationStatus,
-      hasAttemptedConnection
-    })
-
-    if (session && session.status === 'pending' && id && conversationStatus === 'disconnected' && !hasAttemptedConnection) {
-      console.log('SessionPage: All conditions met, setting hasAttemptedConnection to true')
-      setHasAttemptedConnection(true)
+    if (session && session.status === 'pending' && id && conversationStatus === 'disconnected' && !hasAttemptedConnection.current) {
+      hasAttemptedConnection.current = true
       // Small delay to let UI render
       const timer = setTimeout(() => {
-        console.log('SessionPage: Starting conversation with ID:', id)
         startConversation(id)
       }, 1000)
       return () => {
-        console.log('SessionPage: Clearing conversation start timer')
         clearTimeout(timer)
       }
-    } else {
-      console.log('SessionPage: Conditions not met for starting conversation:', {
-        hasSession: !!session,
-        sessionStatus: session?.status,
-        hasId: !!id,
-        conversationStatus,
-        hasAttemptedConnection
-      })
     }
-  }, [session, id, conversationStatus, startConversation, hasAttemptedConnection])
+  }, [session, id, conversationStatus, startConversation])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -187,7 +165,7 @@ export default function SessionPage() {
           {/* Call Interface */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-              {!hasAttemptedConnection && session?.status === 'pending' ? (
+              {!hasAttemptedConnection.current && session?.status === 'pending' ? (
                 <div className="space-y-6">
                   <div className="flex justify-center">
                     <div className="w-32 h-32 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
@@ -324,7 +302,7 @@ export default function SessionPage() {
                     <button
                       onClick={() => {
                         if (id) {
-                          setHasAttemptedConnection(false)
+                          hasAttemptedConnection.current = false
                           setVoiceError(null)
                           startConversation(id)
                         }

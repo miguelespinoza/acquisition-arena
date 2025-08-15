@@ -8,6 +8,35 @@ class Persona < ApplicationRecord
   
   validate :validate_characteristics_structure
   
+  # ElevenLabs agent management
+  
+  def has_elevenlabs_agent?
+    elevenlabs_agent_id.present?
+  end
+  
+  def create_elevenlabs_agent!
+    return self if has_elevenlabs_agent?
+    
+    agent_service = ElevenLabsAgentService.new
+    result = agent_service.create_agent_for_persona(self)
+    
+    if result[:success]
+      update!(
+        elevenlabs_agent_id: result[:agent_id],
+        voice_id: agent_service.select_voice_for_persona(self),
+        conversation_prompt: result[:prompt],
+        voice_settings: result[:voice_settings],
+        agent_created_at: Time.current
+      )
+      Rails.logger.info "Created ElevenLabs agent #{result[:agent_id]} for persona #{name}"
+    else
+      Rails.logger.error "Failed to create ElevenLabs agent for persona #{name}: #{result[:error]}"
+      raise StandardError, "Failed to create ElevenLabs agent: #{result[:error]}"
+    end
+    
+    self
+  end
+  
   private
   
   def validate_characteristics_structure
@@ -31,12 +60,22 @@ end
 #
 # Table name: personas
 #
-#  id                      :bigint           not null, primary key
+#  id                      :uuid             not null, primary key
+#  agent_created_at        :datetime
 #  avatar_url              :string
 #  characteristics         :json
 #  characteristics_version :integer
+#  conversation_prompt     :text
 #  description             :text
 #  name                    :string
+#  voice_settings          :json
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
+#  elevenlabs_agent_id     :string
+#  voice_id                :string
+#
+# Indexes
+#
+#  index_personas_on_elevenlabs_agent_id  (elevenlabs_agent_id) UNIQUE
+#  index_personas_on_id                   (id) UNIQUE
 #

@@ -1,4 +1,5 @@
 class Api::ElevenlabsController < ApplicationController
+  include Secured
 
   def session_token
     training_session = current_user.training_sessions.find(params[:training_session_id])
@@ -8,52 +9,57 @@ class Api::ElevenlabsController < ApplicationController
       return
     end
 
-    # TODO: Generate actual ElevenLabs session token
-    token = generate_elevenlabs_token(training_session)
-    
-    training_session.update!(
-      status: 'active',
-      elevenlabs_session_token: token
-    )
+    # Ensure persona has an ElevenLabs agent
+    persona = training_session.persona
+    unless persona.has_elevenlabs_agent?
+      render json: { error: 'Persona does not have an ElevenLabs agent. Please contact support.' }, status: :unprocessable_entity
+      return
+    end
 
-    render json: { token: token }
+    # Generate actual ElevenLabs session token
+    result = generate_elevenlabs_session(training_session)
+    
+    if result[:success]
+      training_session.update!(
+        status: 'active',
+        elevenlabs_session_token: result[:signed_url]
+      )
+
+      render json: { 
+        token: result[:signed_url],
+        conversation_id: result[:conversation_id],
+        agent_id: persona.elevenlabs_agent_id
+      }
+    else
+      render json: { error: result[:error] }, status: :unprocessable_entity
+    end
   end
 
   private
 
-  def generate_elevenlabs_token(training_session)
-    # TODO: Implement actual ElevenLabs API call
-    # This should create a conversation session with system prompt
-    system_prompt = build_system_prompt(training_session)
-    
-    Rails.logger.info "System prompt: #{system_prompt}"
-    
-    # Placeholder token
-    "elevenlabs_token_#{SecureRandom.hex(16)}"
-  end
-
-  def build_system_prompt(training_session)
+  def generate_elevenlabs_session(training_session)
     persona = training_session.persona
-    parcel = training_session.parcel
+    user_id = current_user.clerk_user_id || current_user.id.to_s
     
-    <<~PROMPT
-      You are #{persona.name}. #{persona.description}
-      
-      Personality characteristics:
-      - Temper level: #{persona.characteristics['temper_level']}
-      - Knowledge level: #{persona.characteristics['knowledge_level']}  
-      - Chattiness: #{persona.characteristics['chattiness_level']}
-      - Urgency: #{persona.characteristics['urgency_level']}
-      - Price flexibility: #{persona.characteristics['price_flexibility']}
-      
-      You own a property with these details:
-      - Location: #{parcel.location}
-      - Parcel Number: #{parcel.parcel_number}
-      - Acres: #{parcel.property_features['acres']}
-      - Market Value: $#{parcel.property_features['market_value']}
-      
-      The caller is a land investor interested in potentially buying your property. 
-      Respond naturally according to your personality traits.
-    PROMPT
+    # Log the session creation attempt
+    Rails.logger.info "Creating ElevenLabs session for persona: #{persona.name}, agent: #{persona.elevenlabs_agent_id}"
+    
+    # Create conversation session using ElevenLabs service
+    service = ElevenLabsAgentService.new
+    result = service.create_conversation_session(persona.elevenlabs_agent_id, user_id)
+    
+    if result[:success]
+      Rails.logger.info "Successfully created ElevenLabs session: #{result[:conversation_id]}"
+    else
+      Rails.logger.error "Failed to create ElevenLabs session: #{result[:error]}"
+    end
+    
+    result
+  rescue StandardError => e
+    Rails.logger.error "ElevenLabs session creation error: #{e.message}"
+    {
+      success: false,
+      error: "Failed to create voice session: #{e.message}"
+    }
   end
 end

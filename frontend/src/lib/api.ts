@@ -26,6 +26,7 @@ class ApiClient {
     }
 
     const url = `${this.baseURL}${endpoint}`
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -40,7 +41,7 @@ class ApiClient {
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 
   async get<T>(endpoint: string): Promise<T> {
