@@ -105,7 +105,11 @@
       "WebFetch(domain:airtable.com)",
       "WebFetch(domain:expo.dev)",
       "WebFetch(domain:github.com)",
-      "Bash(./scripts/get-existing-leads.sh:*)"
+      "Bash(./scripts/get-existing-leads.sh:*)",
+      "WebSearch",
+      "WebSearch",
+      "WebFetch(domain:clerk.com)",
+      "Bash(export PATH=\"$HOME/.rbenv/bin:$PATH\")"
     ],
     "deny": []
   },
