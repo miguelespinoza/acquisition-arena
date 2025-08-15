@@ -23,7 +23,7 @@ class Api::TrainingSessionsController < ApplicationController
   end
 
   def show
-    render json: TrainingSessionBlueprint.render(@training_session, view: :detailed)
+    render json: TrainingSessionBlueprint.render(@training_session)
   end
 
   def complete
@@ -36,7 +36,7 @@ class Api::TrainingSessionsController < ApplicationController
 
     # TODO: Trigger background grading job
     
-    render json: TrainingSessionBlueprint.render(@training_session, view: :detailed)
+    render json: TrainingSessionBlueprint.render(@training_session)
   end
 
   private

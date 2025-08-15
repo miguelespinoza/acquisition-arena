@@ -31,7 +31,7 @@ end
 #
 # Table name: training_sessions
 #
-#  id                       :bigint           not null, primary key
+#  id                       :uuid             not null, primary key
 #  audio_url                :string
 #  conversation_transcript  :text
 #  elevenlabs_session_token :string
@@ -41,12 +41,13 @@ end
 #  status                   :string
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
-#  parcel_id                :bigint           not null
-#  persona_id               :bigint           not null
-#  user_id                  :bigint           not null
+#  parcel_id                :uuid             not null
+#  persona_id               :uuid             not null
+#  user_id                  :uuid             not null
 #
 # Indexes
 #
+#  index_training_sessions_on_id          (id) UNIQUE
 #  index_training_sessions_on_parcel_id   (parcel_id)
 #  index_training_sessions_on_persona_id  (persona_id)
 #  index_training_sessions_on_user_id     (user_id)

@@ -18,11 +18,15 @@ end
 #
 # Table name: users
 #
-#  id                   :bigint           not null, primary key
+#  id                   :uuid             not null, primary key
 #  invite_code          :string
 #  invite_code_redeemed :boolean
 #  sessions_remaining   :integer
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
 #  clerk_user_id        :string
+#
+# Indexes
+#
+#  index_users_on_id  (id) UNIQUE
 #

@@ -28,10 +28,14 @@ end
 #
 # Table name: parcels
 #
-#  id                :bigint           not null, primary key
+#  id                :uuid             not null, primary key
 #  location          :string
 #  parcel_number     :string
 #  property_features :json
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
+#
+# Indexes
+#
+#  index_parcels_on_id  (id) UNIQUE
 #
