@@ -272,6 +272,22 @@ class ElevenLabsAgentService
     traits.join('. ')
   end
   
+  def format_all_characteristics(characteristics)
+    formatted_traits = []
+    
+    characteristics.each do |trait_name, trait_data|
+      if trait_data.is_a?(Hash) && trait_data['score'] && trait_data['description']
+        # Format: "- Trait Name (score): description"
+        formatted_name = trait_name.humanize
+        score = trait_data['score']
+        description = trait_data['description']
+        formatted_traits << "- #{formatted_name} (#{score}): #{description}"
+      end
+    end
+    
+    formatted_traits.join("\n")
+  end
+  
   def determine_motivation_level(characteristics)
     urgency = characteristics['urgency_level']
     financial_desperation = characteristics['financial_desperation']
