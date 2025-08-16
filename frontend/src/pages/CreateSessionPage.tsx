@@ -216,7 +216,7 @@ export default function CreateSessionPage() {
                     </div>
                     <h3 className="ml-3 text-xl font-semibold text-gray-900">Parcel #{parcel.parcelNumber}</h3>
                   </div>
-                  <p className="text-gray-600 mb-4 font-medium">{parcel.location}</p>
+                  <p className="text-gray-600 mb-4 font-medium">{parcel.city}, {parcel.state}</p>
                   {parcel.propertyFeatures && typeof parcel.propertyFeatures === 'object' && (
                     <div className="space-y-2">
                       {Object.entries(parcel.propertyFeatures).slice(0, 3).map(([key, value]) => (
@@ -277,7 +277,7 @@ export default function CreateSessionPage() {
                     </div>
                     <div className="ml-4">
                       <h4 className="text-xl font-semibold text-gray-900">Parcel #{selectedParcel.parcelNumber}</h4>
-                      <p className="text-gray-600 font-medium">{selectedParcel.location}</p>
+                      <p className="text-gray-600 font-medium">{selectedParcel.city}, {selectedParcel.state}</p>
                     </div>
                   </div>
                   {selectedParcel.propertyFeatures && typeof selectedParcel.propertyFeatures === 'object' && (

@@ -380,7 +380,7 @@ export default function SessionPage() {
               <div className="space-y-3">
                 <div>
                   <h4 className="font-semibold text-gray-900">Parcel #{session.parcel?.parcelNumber}</h4>
-                  <p className="text-sm text-gray-600 font-medium">{session.parcel?.location}</p>
+                  <p className="text-sm text-gray-600 font-medium">{session.parcel?.city}, {session.parcel?.state}</p>
                 </div>
                 {session.parcel?.propertyFeatures && typeof session.parcel.propertyFeatures === 'object' && (
                   <div className="space-y-2">
