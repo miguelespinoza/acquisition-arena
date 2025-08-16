@@ -222,51 +222,6 @@ class ElevenLabsAgentService
       .strip
   end
   
-  def build_personality_description(characteristics)
-    traits = []
-    
-    # Temper level
-    case characteristics['temper_level']
-    when 0..0.3
-      traits << "You are calm and patient, rarely getting upset"
-    when 0.3..0.7
-      traits << "You have a moderate temperament and can get frustrated if pressured"
-    else
-      traits << "You have a quick temper and get irritated easily, especially with pushy salespeople"
-    end
-    
-    # Knowledge level
-    case characteristics['knowledge_level']
-    when 0..0.3
-      traits << "You have limited knowledge about real estate transactions and rely on gut feelings"
-    when 0.3..0.7
-      traits << "You have some knowledge about property sales but aren't an expert"
-    else
-      traits << "You're well-informed about real estate markets and know your property's value"
-    end
-    
-    # Chattiness level
-    case characteristics['chattiness_level']
-    when 0..0.3
-      traits << "You tend to be quiet and give short, direct answers"
-    when 0.3..0.7
-      traits << "You're moderately talkative and share some personal details"
-    else
-      traits << "You're very talkative and love to share stories and details"
-    end
-    
-    # Decision making speed
-    case characteristics['decision_making_speed']
-    when 0..0.3
-      traits << "You take your time making decisions and don't like to be rushed"
-    when 0.3..0.7
-      traits << "You make decisions at a reasonable pace after considering options"
-    else
-      traits << "You make quick decisions and like to move fast in negotiations"
-    end
-    
-    traits.join('. ')
-  end
   
   def format_all_characteristics(characteristics)
     formatted_traits = []
@@ -284,46 +239,6 @@ class ElevenLabsAgentService
     formatted_traits.join("\n")
   end
   
-  def determine_motivation_level(characteristics)
-    urgency = characteristics['urgency_level']
-    financial_desperation = characteristics['financial_desperation']
-    
-    combined_motivation = (urgency + financial_desperation) / 2
-    
-    case combined_motivation
-    when 0..0.3
-      "You're not in a hurry to sell and will be very selective about offers. You can afford to wait for the right buyer."
-    when 0.3..0.7
-      "You're interested in selling but want to make sure you get a fair deal. You're open to reasonable negotiations."
-    else
-      "You're highly motivated to sell due to financial pressures or life circumstances. You're willing to negotiate significantly to close a deal quickly."
-    end
-  end
-  
-  def determine_conversation_style(characteristics)
-    skepticism = characteristics['skepticism_level']
-    emotional_attachment = characteristics['emotional_attachment']
-    
-    styles = []
-    
-    if skepticism > 0.7
-      styles << "You're naturally skeptical of investors and ask lots of probing questions"
-    elsif skepticism > 0.3
-      styles << "You're cautious but willing to listen to reasonable proposals"
-    else
-      styles << "You're generally trusting and open to new opportunities"
-    end
-    
-    if emotional_attachment > 0.7
-      styles << "You have strong emotional ties to the property and may get sentimental"
-    elsif emotional_attachment > 0.3
-      styles << "You have some attachment to the property but can be practical"
-    else
-      styles << "You view the property purely as a business transaction"
-    end
-    
-    styles.join('. ')
-  end
   
 
   def generate_voice_settings(persona)
