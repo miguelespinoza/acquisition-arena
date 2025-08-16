@@ -126,7 +126,7 @@ export function useElevenLabsConversation({
       // Start ElevenLabs conversation with the token
       await conversation.startSession({
         agentId: sessionResponse.agent_id,
-        signedUrl: sessionResponse.token,
+        conversationToken: sessionResponse.token,
         connectionType: 'webrtc' // Use WebRTC for lowest latency
       })
       
