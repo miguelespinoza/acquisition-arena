@@ -211,18 +211,14 @@ class ElevenLabsAgentService
   def generate_base_prompt(persona)
     characteristics = persona.characteristics
     
-    # Convert characteristics to personality descriptors
-    personality_traits = build_personality_description(characteristics)
-    motivation_level = determine_motivation_level(characteristics)
-    conversation_style = determine_conversation_style(characteristics)
+    # Format all characteristics for the prompt
+    formatted_characteristics = format_all_characteristics(characteristics)
     
     # Use the prompt template from constants
     Prompts::PERSONA_BASE_PROMPT
       .gsub('{persona_name}', persona.name)
       .gsub('{persona_description}', persona.description)
-      .gsub('{personality_traits}', personality_traits)
-      .gsub('{motivation_level}', motivation_level)
-      .gsub('{conversation_style}', conversation_style)
+      .gsub('{characteristics}', formatted_characteristics)
       .strip
   end
   
