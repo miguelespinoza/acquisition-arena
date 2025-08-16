@@ -2,7 +2,8 @@ class Parcel < ApplicationRecord
   has_many :training_sessions, dependent: :destroy
   
   validates :parcel_number, presence: true, uniqueness: true
-  validates :location, presence: true
+  validates :city, presence: true
+  validates :state, presence: true
   validates :property_features, presence: true
   
   validate :validate_property_features_structure
@@ -29,9 +30,10 @@ end
 # Table name: parcels
 #
 #  id                :uuid             not null, primary key
-#  location          :string
+#  city              :string
 #  parcel_number     :string
 #  property_features :json
+#  state             :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #

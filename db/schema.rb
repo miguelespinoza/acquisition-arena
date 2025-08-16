@@ -10,17 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_15_000000) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_16_104710) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
 
   create_table "parcels", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "parcel_number"
-    t.string "location"
     t.json "property_features"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "city"
+    t.string "state"
     t.index ["id"], name: "index_parcels_on_id", unique: true
   end
 
