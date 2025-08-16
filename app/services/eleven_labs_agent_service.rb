@@ -137,39 +137,6 @@ class ElevenLabsAgentService
     end
   end
   
-  def select_voice_for_persona(persona)
-    # Map persona characteristics to appropriate voices
-    # Using common ElevenLabs default voices that should be available
-    
-    characteristics = persona.characteristics
-    temper = characteristics['temper_level']
-    chattiness = characteristics['chattiness_level']
-
-    case
-    when temper > 0.7 && chattiness > 0.7
-      # High temper, very chatty - energetic, potentially aggressive voice
-      "EXAVITQu4vr4xnSDxMaL" # Bella - assertive female (common default)
-    when temper < 0.3 && chattiness > 0.7
-      # Calm but chatty - warm, friendly voice
-      "21m00Tcm4TlvDq8ikWAM" # Rachel - warm female (common default)
-    when temper > 0.7 && chattiness < 0.3
-      # High temper, quiet - stern, direct voice  
-      "pNInz6obpgDQGcFmaJgB" # Adam - authoritative male (common default)
-    when temper < 0.3 && chattiness < 0.3
-      # Calm and quiet - gentle, soft voice
-      "AZnzlk1XvdvUeBnXmlld" # Domi - gentle female (common default)
-    else
-      # Moderate characteristics - balanced voice (fallback to Rachel)
-      "21m00Tcm4TlvDq8ikWAM" # Rachel - reliable fallback
-    end
-  rescue StandardError => e
-    Rails.logger.warn('voice_selection_failed',
-      persona: persona.name,
-      error: e.message
-    )
-    # Fallback to Rachel if voice selection fails
-    "21m00Tcm4TlvDq8ikWAM"
-  end
   
   private
   
@@ -181,7 +148,7 @@ class ElevenLabsAgentService
   end
   
   def build_agent_configuration(persona)
-    voice_id = select_voice_for_persona(persona)
+    voice_id = persona.voice_id
     prompt = generate_base_prompt(persona)
     voice_settings = generate_voice_settings(persona)
     
@@ -242,17 +209,11 @@ class ElevenLabsAgentService
   
 
   def generate_voice_settings(persona)
-    characteristics = persona.characteristics
-    
-    # Adjust voice settings based on personality
-    stability = 0.5 + (characteristics['temper_level'] * 0.3) # Higher temper = less stable
-    similarity_boost = 0.7
-    style = characteristics['emotional_attachment'] * 0.5 # More attachment = more emotional style
-    
+    # Static voice settings for all personas
     {
-      stability: stability.clamp(0, 1),
-      similarity_boost: similarity_boost,
-      style: style.clamp(0, 1),
+      stability: 0.7,
+      similarity_boost: 0.7,
+      style: 0.5,
       use_speaker_boost: true
     }
   end

@@ -79,7 +79,6 @@ end
 #  conversation_prompt     :text
 #  description             :text
 #  name                    :string
-#  voice_settings          :json
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
 #  elevenlabs_agent_id     :string

@@ -11,7 +11,8 @@ puts "Creating personas..."
 # Recently widowed, trusting, emotional about property but willing to negotiate for right buyer
 Persona.find_or_create_by!(name: "Sally Henderson") do |persona|
   persona.description = "Recently widowed retiree looking to downsize. Former elementary school teacher who inherited the property from her late husband. Friendly and trusting but needs reassurance about financial security."
-  persona.avatar_url = "/sally.png"
+  persona.avatar_url = "/sally_henderson.png"
+  persona.voice_id = "21m00Tcm4TlvDq8ikWAM"  # Rachel - warm female voice
   persona.characteristics_version = 1
   persona.characteristics = {
     temper_level: {
@@ -61,7 +62,8 @@ end
 # Third-generation farmer, knowledgeable but cautious, values honesty and straightforward communication
 Persona.find_or_create_by!(name: "Robert Mitchell") do |persona|
   persona.description = "Third-generation farmer with deep agricultural roots. Practical, no-nonsense approach to business. Values honesty and straightforward communication over flashy sales tactics."
-  persona.avatar_url = "/bob.png"
+  persona.avatar_url = "/robert_mitchell.png"
+  persona.voice_id = "pNInz6obpgDQGcFmaJgB"  # Adam - authoritative male voice
   persona.characteristics_version = 1
   persona.characteristics = {
     temper_level: {
@@ -111,7 +113,8 @@ end
 # Data-driven decision maker, efficient communicator, needs to sell due to international relocation
 Persona.find_or_create_by!(name: "Frederick Chen") do |persona|
   persona.description = "Software executive who bought land as investment 5 years ago. Data-driven decision maker who researches everything. Currently relocating to Singapore for work."
-  persona.avatar_url = "/fred.png"
+  persona.avatar_url = "/frederick_chen.png"
+  persona.voice_id = "onwK4e9ZLuTAKqWW03F9"  # Daniel - professional male voice
   persona.characteristics_version = 1
   persona.characteristics = {
     temper_level: {
@@ -161,7 +164,8 @@ end
 # Sharp, perceptive, guards against being taken advantage of, dealt with aggressive investors before
 Persona.find_or_create_by!(name: "Margaret Thompson") do |persona|
   persona.description = "Retired nurse whose late husband left her several properties. Has dealt with aggressive investors before and guards against being taken advantage of. Sharp and perceptive."
-  persona.avatar_url = "/sally.png"  # Reusing image for now
+  persona.avatar_url = "/margaret_thompson.png"
+  persona.voice_id = "EXAVITQu4vr4xnSDxMaL"  # Bella - mature female voice
   persona.characteristics_version = 1
   persona.characteristics = {
     temper_level: {
@@ -211,7 +215,8 @@ end
 # Construction contractor facing cash flow crisis, extremely motivated to sell quickly
 Persona.find_or_create_by!(name: "Thomas Rodriguez") do |persona|
   persona.description = "Construction contractor facing cash flow crisis after major client defaulted. Needs quick sale to avoid foreclosure on business loans. Bought land to develop but ran out of capital."
-  persona.avatar_url = "/bob.png"  # Reusing image for now
+  persona.avatar_url = "/thomas_rodriguez.png"
+  persona.voice_id = "ErXwobaYiN019PkySvjV"  # Antoni - expressive male voice
   persona.characteristics_version = 1
   persona.characteristics = {
     temper_level: {
@@ -261,7 +266,8 @@ end
 # Inherited property from estranged father, frustrated by burden, particular about everything
 Persona.find_or_create_by!(name: "Patricia Williams") do |persona|
   persona.description = "Inherited property from estranged father's estate. Corporate HR director who's particular about everything. Frustrated by the burden of unexpected property ownership."
-  persona.avatar_url = "/sally.png"  # Reusing image for now
+  persona.avatar_url = "/patricia_williams.png"
+  persona.voice_id = "ThT5KcBeYPX3keUQqHPh"  # Dorothy - assertive female voice
   persona.characteristics_version = 1
   persona.characteristics = {
     temper_level: {
