@@ -49,8 +49,19 @@ class Persona < ApplicationRecord
     ]
     
     required_keys.each do |key|
-      unless characteristics[key].is_a?(Numeric) && characteristics[key].between?(0, 1)
-        errors.add(:characteristics, "#{key} must be a number between 0 and 1")
+      characteristic = characteristics[key]
+      
+      unless characteristic.is_a?(Hash)
+        errors.add(:characteristics, "#{key} must be a hash with score and description")
+        next
+      end
+      
+      unless characteristic['score'].is_a?(Numeric) && characteristic['score'].between?(0, 1)
+        errors.add(:characteristics, "#{key} score must be a number between 0 and 1")
+      end
+      
+      unless characteristic['description'].present?
+        errors.add(:characteristics, "#{key} description must be present")
       end
     end
   end
