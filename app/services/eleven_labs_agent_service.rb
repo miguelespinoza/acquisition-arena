@@ -192,7 +192,7 @@ class ElevenLabsAgentService
           prompt: {
             prompt: prompt
           },
-          first_message: generate_first_message(persona),
+          first_message: "Hello?",
           language: "en"
         },
         tts: {
@@ -313,48 +313,6 @@ class ElevenLabsAgentService
     styles.join('. ')
   end
   
-  def generate_first_message(persona)
-    characteristics = persona.characteristics
-    chattiness = characteristics['chattiness_level']
-    temper = characteristics['temper_level']
-    
-    # Generate a greeting based on persona characteristics
-    greeting_options = if chattiness > 0.7
-      # Very chatty personas
-      [
-        "Hi there! I heard you might be interested in my property. I'm #{persona.name}, and I'd love to tell you all about it!",
-        "Hello! Thanks for calling about my land. I'm #{persona.name}, and boy do I have some stories about this property!",
-        "Hey! I'm so glad you reached out. I'm #{persona.name}, and I've been hoping to find the right buyer for my place."
-      ]
-    elsif chattiness > 0.3
-      # Moderately talkative personas
-      [
-        "Hello, this is #{persona.name}. I understand you're interested in my property?",
-        "Hi, I'm #{persona.name}. Thanks for reaching out about my land.",
-        "Hello there! I'm #{persona.name}. So you're looking at buying my property?"
-      ]
-    else
-      # Quiet personas
-      [
-        "Hello. #{persona.name} speaking.",
-        "Hi. This is #{persona.name}.",
-        "Hello. You called about my property?"
-      ]
-    end
-    
-    # Adjust tone based on temper
-    selected_greeting = greeting_options.sample
-    
-    if temper > 0.7
-      # Add some edge for high-temper personas
-      selected_greeting += " I hope you're serious about this - I don't have time for tire kickers."
-    elsif temper < 0.3
-      # Add warmth for calm personas
-      selected_greeting += " I'm happy to answer any questions you might have."
-    end
-    
-    selected_greeting
-  end
 
   def generate_voice_settings(persona)
     characteristics = persona.characteristics
