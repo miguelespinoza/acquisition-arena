@@ -2,10 +2,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useSWR from 'swr'
 import { useApiClient } from '@/lib/api'
 import type { TrainingSession } from '@/types'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { getPersonaAvatar } from '@/utils/avatar'
 import { useElevenLabsConversation } from '@/hooks/useElevenLabsConversation'
 import { WaveformVisualizer } from '@/components/WaveformVisualizer'
+import { MicrophoneSelector } from '@/components/MicrophoneSelector'
 import { Settings, User, MapPin, BarChart3, X, PhoneOff, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -15,6 +16,8 @@ export default function SessionPage() {
   const apiClient = useApiClient()
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [volume, setVolume] = useState(0.8)
+  const [selectedMicrophoneId, setSelectedMicrophoneId] = useState<string>('')
+  const [microphoneConfigured, setMicrophoneConfigured] = useState(false)
   const hasAttemptedConnection = useRef(false)
 
   // Fetch session details
@@ -22,6 +25,14 @@ export default function SessionPage() {
     id ? `/training_sessions/${id}` : null,
     () => apiClient.get<TrainingSession>(`/training_sessions/${id}`)
   )
+
+  // Memoize persona avatar URL
+  const personaAvatarUrl = useMemo(() => {
+    if (session?.persona?.avatarUrl) {
+      return getPersonaAvatar(session.persona.avatarUrl, "../")
+    }
+    return null
+  }, [session?.persona?.avatarUrl])
 
   // ElevenLabs conversation hook
   const {
@@ -50,9 +61,9 @@ export default function SessionPage() {
     }
   })
 
-  // Auto-start conversation when session is loaded and pending (only once)
+  // Auto-start conversation when session is loaded, pending, and microphone is configured
   useEffect(() => {
-    if (session && session.status === 'pending' && id && conversationStatus === 'disconnected' && !hasAttemptedConnection.current) {
+    if (session && session.status === 'pending' && id && conversationStatus === 'disconnected' && !hasAttemptedConnection.current && microphoneConfigured) {
       hasAttemptedConnection.current = true
       // Small delay to let UI render
       const timer = setTimeout(() => {
@@ -62,7 +73,7 @@ export default function SessionPage() {
         clearTimeout(timer)
       }
     }
-  }, [session, id, conversationStatus, startConversation])
+  }, [session, id, conversationStatus, startConversation, microphoneConfigured])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -165,7 +176,12 @@ export default function SessionPage() {
           {/* Call Interface */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-              {!hasAttemptedConnection.current && session?.status === 'pending' ? (
+              {!microphoneConfigured && session?.status === 'pending' ? (
+                <MicrophoneSelector
+                  onMicrophoneSelected={setSelectedMicrophoneId}
+                  onContinue={() => setMicrophoneConfigured(true)}
+                />
+              ) : !hasAttemptedConnection.current && session?.status === 'pending' && microphoneConfigured ? (
                 <div className="space-y-6">
                   <div className="flex justify-center">
                     <div className="w-32 h-32 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
@@ -175,17 +191,17 @@ export default function SessionPage() {
                   <div className="space-y-2">
                     <h2 className="text-3xl font-bold text-gray-900">🎯 Preparing Session</h2>
                     <p className="text-xl text-gray-600">Setting up voice conversation with {session.persona?.name}...</p>
-                    <p className="text-gray-500">Please allow microphone access when prompted</p>
+                    <p className="text-gray-500">Microphone configured, connecting...</p>
                   </div>
                 </div>
               ) : conversationStatus === 'connecting' || isConnecting ? (
                 <div className="space-y-6">
                   {/* Persona Avatar with pulse rings */}
                   <div className="flex justify-center relative">
-                    {session.persona && getPersonaAvatar(session.persona.avatarUrl) ? (
+                    {personaAvatarUrl ? (
                       <img
-                        src={getPersonaAvatar(session.persona.avatarUrl, "../")!}
-                        alt={session.persona.name}
+                        src={personaAvatarUrl}
+                        alt={session.persona?.name}
                         className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg relative z-10"
                       />
                     ) : (
@@ -211,10 +227,10 @@ export default function SessionPage() {
                 <div className="space-y-6">
                   {/* Persona Avatar with speaking indicator */}
                   <div className="flex justify-center relative">
-                    {session.persona && getPersonaAvatar(session.persona.avatarUrl) ? (
+                    {personaAvatarUrl ? (
                       <img
-                        src={getPersonaAvatar(session.persona.avatarUrl, "../")!}
-                        alt={session.persona.name}
+                        src={personaAvatarUrl}
+                        alt={session.persona?.name}
                         className={`w-32 h-32 rounded-full object-cover border-4 shadow-lg transition-all duration-300 ${
                           isSpeaking ? 'border-green-400 scale-105' : 'border-white'
                         }`}
@@ -304,7 +320,7 @@ export default function SessionPage() {
                         if (id) {
                           hasAttemptedConnection.current = false
                           setVoiceError(null)
-                          startConversation(id)
+                          setMicrophoneConfigured(false) // Go back to mic selection
                         }
                       }}
                       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -337,10 +353,10 @@ export default function SessionPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center">
-                  {session.persona && getPersonaAvatar(session.persona.avatarUrl) ? (
+                  {personaAvatarUrl ? (
                     <img
-                      src={getPersonaAvatar(session.persona.avatarUrl, "../")!}
-                      alt={session.persona.name}
+                      src={personaAvatarUrl}
+                      alt={session.persona?.name}
                       className="w-12 h-12 rounded-full object-cover"
                     />
                   ) : (
