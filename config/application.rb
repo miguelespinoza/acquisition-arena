@@ -29,8 +29,12 @@ module AcquisitionArena
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    # Load Clerk configuration
+    # Load Clerk configuration and gem
+    require 'clerk'
     require Rails.root.join('config/clerk.rb')
+    
+    # Add Clerk middleware manually for API mode  
+    config.middleware.use Clerk::Rack::Middleware
 
     # Semantic Logger configuration
     config.semantic_logger.application = 'acquisition_arena'

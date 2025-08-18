@@ -36,7 +36,7 @@ gem "thruster", require: false
 gem "rack-cors"
 
 # Clerk authentication
-gem "clerk-sdk-ruby", require: "clerk"
+gem "clerk-sdk-ruby", "~> 4.0", require: "clerk"
 gem "jwt"
 
 # JSON serialization

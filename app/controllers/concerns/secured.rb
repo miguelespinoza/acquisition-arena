@@ -5,58 +5,29 @@ module Secured
 
   def current_user
     return @current_user if @current_user
-
-    clerk_user_id = extract_clerk_user_id
-    return nil if clerk_user_id.blank?
-
+    
+    # Access clerk_user from the request env set by middleware
+    clerk_data = request.env['clerk']
+    return nil if clerk_data.blank? || clerk_data&.user.blank?
+    
+    clerk_user = clerk_data.user
+    clerk_user_id = clerk_user.id  # Access as method, not hash
+    
     @current_user = User.find_by(clerk_user_id: clerk_user_id)
 
     if @current_user.blank?
-      @current_user = User.create!(clerk_user_id: clerk_user_id)
+      # Extract email from clerk user data - email_addresses is an array of EmailAddress objects
+      email = clerk_user.email_addresses&.first&.email_address if clerk_user.email_addresses&.any?
+      
+      @current_user = User.create!(
+        clerk_user_id: clerk_user_id,
+        email_address: email
+      )
     end
 
     @current_user
   rescue ActiveRecord::RecordInvalid, PG::UniqueViolation, StandardError => e
     Rails.logger.error "Error finding/creating user: #{e.message}"
-    User.find_by(clerk_user_id: clerk_user_id) if clerk_user_id.present?
-  end
-
-  private
-
-  def extract_clerk_user_id
-    # Try to get user data from Clerk middleware/proxy
-    clerk_proxy = request.env['clerk']
-    if clerk_proxy.respond_to?(:user) && clerk_proxy.user.present?
-      return clerk_proxy.user['id']
-    end
-
-    # If middleware didn't work, manually extract from session token
-    token = extract_session_token
-    return nil if token.blank?
-
-    verify_session_token(token)
-  end
-
-  def extract_session_token
-    # Check for token in Authorization header
-    auth_header = request.headers['Authorization']
-    return auth_header.split(' ').last if auth_header&.start_with?('Bearer ')
-
-    # Check for __session cookie
-    request.cookies['__session']
-  end
-
-  def verify_session_token(token)
-    begin
-      # Decode JWT without verification first to get the payload
-      decoded_token = JWT.decode(token, nil, false)
-      payload = decoded_token[0]
-      
-      # Extract user ID from the 'sub' claim
-      payload['sub'] if payload
-    rescue => e
-      Rails.logger.error "JWT decode failed: #{e.message}"
-      nil
-    end
+    User.find_by(clerk_user_id: clerk_user_id) if defined?(clerk_user_id) && clerk_user_id.present?
   end
 end

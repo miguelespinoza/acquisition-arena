@@ -19,6 +19,7 @@ end
 # Table name: users
 #
 #  id                   :uuid             not null, primary key
+#  email_address        :string
 #  invite_code          :string
 #  invite_code_redeemed :boolean
 #  sessions_remaining   :integer
@@ -28,5 +29,6 @@ end
 #
 # Indexes
 #
-#  index_users_on_id  (id) UNIQUE
+#  index_users_on_email_address  (email_address)
+#  index_users_on_id             (id) UNIQUE
 #
