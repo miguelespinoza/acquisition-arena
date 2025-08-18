@@ -224,7 +224,8 @@ class ElevenLabsAgentService
       conversation_config: {
         agent: {
           prompt: {
-            prompt: prompt
+            prompt: prompt,
+            tools: [Prompts::END_CALL_TOOL]
           },
           first_message: first_message,
           language: "en"
