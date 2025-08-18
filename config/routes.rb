@@ -21,6 +21,9 @@ Rails.application.routes.draw do
         post :start_conversation
       end
     end
+    
+    # Feedback endpoint
+    post 'feedback', to: 'feedback#create'
   end
 
   # Defines the root path route ("/")
