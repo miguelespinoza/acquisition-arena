@@ -23,9 +23,7 @@ class Persona < ApplicationRecord
     if result[:success]
       update!(
         elevenlabs_agent_id: result[:agent_id],
-        voice_id: agent_service.select_voice_for_persona(self),
         conversation_prompt: result[:prompt],
-        voice_settings: result[:voice_settings],
         agent_created_at: Time.current
       )
       Rails.logger.info "Created ElevenLabs agent #{result[:agent_id]} for persona #{name}"
