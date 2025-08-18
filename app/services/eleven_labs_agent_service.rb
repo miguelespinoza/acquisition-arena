@@ -251,9 +251,9 @@ class ElevenLabsAgentService
     
     # Use the prompt template from constants
     Prompts::LAND_PERSONA_BASE_PROMPT
-      .gsub('{persona_name}', persona.name)
-      .gsub('{persona_description}', persona.description)
-      .gsub('{characteristics}', formatted_characteristics)
+      .gsub('{{persona_name}}', persona.name)
+      .gsub('{{persona_description}}', persona.description)
+      .gsub('{{characteristics}}', formatted_characteristics)
       .strip
   end
   

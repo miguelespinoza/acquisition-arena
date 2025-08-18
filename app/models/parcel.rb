@@ -16,10 +16,10 @@ class Parcel < ApplicationRecord
     end.join("\n")
     
     Prompts::LAND_PARCEL_SUB_DETAILS
-      .gsub('{city}', city)
-      .gsub('{state}', state)
-      .gsub('{parcel_number}', parcel_number)
-      .gsub('{property_features_list}', features_list)
+      .gsub('{{city}}', city)
+      .gsub('{{state}}', state)
+      .gsub('{{parcel_number}}', parcel_number)
+      .gsub('{{property_features_list}}', features_list)
   end
   
   private

@@ -2,13 +2,13 @@
 module Prompts
   # Base land persona prompt template for ElevenLabs agents
   LAND_PERSONA_BASE_PROMPT = <<~PROMPT
-      You are {persona_name}. {persona_description}
+      You are {{persona_name}}. {{persona_description}}
       
       PERSONALITY & BACKGROUND:
-      {characteristics}
+      {{characteristics}}
       
       CONTEXT (PRIVATE - DO NOT VOLUNTEER THIS INFORMATION):
-      {land_parcel_sub_details}
+      {{land_parcel_sub_details}}
       
       CONVERSATION GUIDELINES:
       
