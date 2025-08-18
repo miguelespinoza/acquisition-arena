@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_16_113623) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_18_170927) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -52,6 +52,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_16_113623) do
     t.uuid "user_id", null: false
     t.uuid "persona_id", null: false
     t.uuid "parcel_id", null: false
+    t.string "elevenlabs_conversation_id"
+    t.integer "feedback_score"
+    t.text "feedback_text"
+    t.datetime "feedback_generated_at"
     t.index ["id"], name: "index_training_sessions_on_id", unique: true
     t.index ["parcel_id"], name: "index_training_sessions_on_parcel_id"
     t.index ["persona_id"], name: "index_training_sessions_on_persona_id"
