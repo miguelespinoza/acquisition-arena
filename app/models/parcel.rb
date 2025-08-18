@@ -8,7 +8,45 @@ class Parcel < ApplicationRecord
   
   validate :validate_property_features_structure
   
+  def get_conversation_subdetails_prompt
+    features_list = property_features.map do |key, value|
+      formatted_key = key.to_s.humanize
+      formatted_value = format_feature_value(key, value)
+      "- #{formatted_key}: #{formatted_value}"
+    end.join("\n")
+    
+    Prompts::LAND_PARCEL_SUB_DETAILS
+      .gsub('{city}', city)
+      .gsub('{state}', state)
+      .gsub('{parcel_number}', parcel_number)
+      .gsub('{property_features_list}', features_list)
+  end
+  
   private
+  
+  def format_feature_value(key, value)
+    case key.to_s
+    when 'market_value', 'assessed_value'
+      # Format as currency since we're not going through the blueprint
+      ActionController::Base.helpers.number_to_currency(value)
+    when 'acres'
+      "#{value} acres"
+    when 'road_frontage'
+      "#{value} feet"
+    when 'buildability_percentage'
+      "#{value}%"
+    when 'slope'
+      "#{value}% grade"
+    when 'fema_coverage', 'wetland_coverage'
+      "#{value}%"
+    when 'landlocked'
+      value ? "Yes" : "No"
+    when 'corporate_owned'
+      value ? "Yes" : "No"
+    else
+      value.to_s
+    end
+  end
   
   def validate_property_features_structure
     return unless property_features.is_a?(Hash)
