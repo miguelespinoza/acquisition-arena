@@ -1,9 +1,23 @@
-// Temporary avatar mapping - TODO: remove when backend provides avatar URLs
-export const getPersonaAvatar = (personaId: string): string | null => {
-  const avatarMap: Record<string, string> = {
-    '61b070c2-df2b-4ab3-aaab-39de45f12e4a': '/fred.png',    // Friendly Fred
-    '77bc11bf-f711-4d0c-a094-c4b1749758aa': '/bob.png',     // Motivated Seller Bob  
-    '7e871d43-2878-496a-9dfe-3afcb43442e3': '/sally.png'    // Skeptical Sally
+export const getPersonaAvatar = (avatarUrl: string | null, prefixPath: string  = ""): string | null => {
+  if (!avatarUrl) return null;
+  
+  // Handle relative paths - check if file exists in public directory
+  if (avatarUrl.startsWith('/')) {
+    const filename = avatarUrl.substring(1); // Remove leading slash
+    console.log('filename: ', filename)
+    
+    // List of known available avatar files
+    const availableAvatars = ['sally_henderson.png', 'patricia_williams.png', 'robert_mitchell.png', 'frederick_chen.png', 'thomas_rodriguez.png', 'margaret_thompson.png'];
+    
+    // Check if the file exists in our available avatars
+    if (availableAvatars.includes(filename)) {
+      return `${prefixPath}avatars${avatarUrl}`;
+    }
+    
+    // File doesn't exist, return null
+    return null;
   }
-  return avatarMap[personaId] || null
+  
+  // Handle absolute URLs (external images)
+  return avatarUrl;
 }

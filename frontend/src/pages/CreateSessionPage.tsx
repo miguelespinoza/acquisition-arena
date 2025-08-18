@@ -127,9 +127,9 @@ export default function CreateSessionPage() {
                   className="bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 >
                   <div className="flex items-center mb-4">
-                    {persona.avatarUrl || getPersonaAvatar(persona.id) ? (
+                    {getPersonaAvatar(persona.avatarUrl) ? (
                       <img
-                        src={persona.avatarUrl || getPersonaAvatar(persona.id)!}
+                        src={getPersonaAvatar(persona.avatarUrl)!}
                         alt={persona.name}
                         className="w-12 h-12 rounded-full object-cover"
                       />
@@ -167,9 +167,9 @@ export default function CreateSessionPage() {
             <div className="mb-8">
               <div className="bg-white rounded-xl p-4 mb-6">
                 <div className="flex items-center">
-                  {selectedPersona.avatarUrl || getPersonaAvatar(selectedPersona.id) ? (
+                  {getPersonaAvatar(selectedPersona.avatarUrl) ? (
                     <img
-                      src={selectedPersona.avatarUrl || getPersonaAvatar(selectedPersona.id)!}
+                      src={getPersonaAvatar(selectedPersona.avatarUrl)!}
                       alt={selectedPersona.name}
                       className="w-8 h-8 rounded-full object-cover"
                     />
@@ -248,9 +248,9 @@ export default function CreateSessionPage() {
                 <div className="bg-white rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Persona</h3>
                   <div className="flex items-center">
-                    {selectedPersona.avatarUrl || getPersonaAvatar(selectedPersona.id) ? (
+                    {getPersonaAvatar(selectedPersona.avatarUrl) ? (
                       <img
-                        src={selectedPersona.avatarUrl || getPersonaAvatar(selectedPersona.id)!}
+                        src={getPersonaAvatar(selectedPersona.avatarUrl)!}
                         alt={selectedPersona.name}
                         className="w-16 h-16 rounded-full object-cover"
                       />

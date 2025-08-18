@@ -182,9 +182,9 @@ export default function SessionPage() {
                 <div className="space-y-6">
                   {/* Persona Avatar with pulse rings */}
                   <div className="flex justify-center relative">
-                    {session.persona && (session.persona.avatarUrl || getPersonaAvatar(session.persona.id)) ? (
+                    {session.persona && getPersonaAvatar(session.persona.avatarUrl) ? (
                       <img
-                        src={session.persona.avatarUrl || getPersonaAvatar(session.persona.id)!}
+                        src={getPersonaAvatar(session.persona.avatarUrl, "../")!}
                         alt={session.persona.name}
                         className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg relative z-10"
                       />
@@ -211,9 +211,9 @@ export default function SessionPage() {
                 <div className="space-y-6">
                   {/* Persona Avatar with speaking indicator */}
                   <div className="flex justify-center relative">
-                    {session.persona && (session.persona.avatarUrl || getPersonaAvatar(session.persona.id)) ? (
+                    {session.persona && getPersonaAvatar(session.persona.avatarUrl) ? (
                       <img
-                        src={session.persona.avatarUrl || getPersonaAvatar(session.persona.id)!}
+                        src={getPersonaAvatar(session.persona.avatarUrl, "../")!}
                         alt={session.persona.name}
                         className={`w-32 h-32 rounded-full object-cover border-4 shadow-lg transition-all duration-300 ${
                           isSpeaking ? 'border-green-400 scale-105' : 'border-white'
@@ -337,9 +337,9 @@ export default function SessionPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center">
-                  {session.persona && (session.persona.avatarUrl || getPersonaAvatar(session.persona.id)) ? (
+                  {session.persona && getPersonaAvatar(session.persona.avatarUrl) ? (
                     <img
-                      src={session.persona.avatarUrl || getPersonaAvatar(session.persona.id)!}
+                      src={getPersonaAvatar(session.persona.avatarUrl, "../")!}
                       alt={session.persona.name}
                       className="w-12 h-12 rounded-full object-cover"
                     />
