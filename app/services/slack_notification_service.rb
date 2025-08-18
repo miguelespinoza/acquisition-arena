@@ -33,7 +33,7 @@ class SlackNotificationService
         fields: [
           {
             type: "mrkdwn",
-            text: "*User:*\n#{user.email}"
+            text: "*User:*\n#{user.email_address || 'No email'}"
           },
           {
             type: "mrkdwn",
@@ -77,19 +77,6 @@ class SlackNotificationService
         }
       end
 
-      if training_session.report_data.present?
-        report_summary = extract_report_summary(training_session.report_data)
-        if report_summary
-          blocks << {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "*Session Report Summary:*\n#{report_summary}"
-            }
-          }
-        end
-      end
-
       blocks.insert(2, {
         type: "section",
         fields: session_fields
@@ -119,26 +106,6 @@ class SlackNotificationService
     }
 
     { blocks: blocks }
-  end
-
-  def extract_report_summary(report_data)
-    return nil unless report_data.is_a?(Hash)
-    
-    summary_parts = []
-    
-    if report_data['score']
-      summary_parts << "Score: #{report_data['score']}/100"
-    end
-    
-    if report_data['strengths'].present?
-      summary_parts << "Strengths: #{report_data['strengths'].first(2).join(', ')}"
-    end
-    
-    if report_data['improvements'].present?
-      summary_parts << "Areas to improve: #{report_data['improvements'].first(2).join(', ')}"
-    end
-    
-    summary_parts.join(" | ") if summary_parts.any?
   end
 
   def send_to_slack(message)
