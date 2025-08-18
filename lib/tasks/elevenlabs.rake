@@ -68,6 +68,61 @@ namespace :elevenlabs do
     puts "  📈 Total personas: #{Persona.count}"
   end
   
+  desc "Update all ElevenLabs agents with new prompt templates"
+  task update_agents: :environment do
+    service = ElevenLabsAgentService.new
+    updated_count = 0
+    failed_count = 0
+    
+    puts "🔄 Starting ElevenLabs agents update with new prompts..."
+    
+    # Find all personas with existing agent IDs
+    personas_with_agents = Persona.where.not(elevenlabs_agent_id: [nil, ''])
+    
+    if personas_with_agents.empty?
+      puts "❌ No personas with ElevenLabs agents found."
+      next
+    end
+    
+    puts "📝 Found #{personas_with_agents.count} personas with agents to update."
+    
+    print "\n🚀 Update all agents with new prompt? (y/N): "
+    response = STDIN.gets.chomp.downcase
+    
+    unless ['y', 'yes'].include?(response)
+      puts "❌ Aborted."
+      next
+    end
+    
+    personas_with_agents.find_each do |persona|
+      print "Updating agent for #{persona.name} (ID: #{persona.elevenlabs_agent_id})... "
+      
+      result = service.update_agent(persona.elevenlabs_agent_id, persona)
+      
+      if result[:success]
+        updated_count += 1
+        
+        # If a new agent was created (fallback scenario), update the persona
+        if result[:agent_id] != persona.elevenlabs_agent_id
+          persona.update!(elevenlabs_agent_id: result[:agent_id])
+          puts "✅ (recreated with new ID: #{result[:agent_id]})"
+        else
+          puts "✅"
+        end
+      else
+        failed_count += 1
+        puts "❌ (#{result[:error]})"
+      end
+      
+      # Add a small delay to avoid rate limiting
+      sleep 0.5
+    end
+    
+    puts "\n📊 Update Summary:"
+    puts "  ✅ Successfully updated: #{updated_count}"
+    puts "  ❌ Failed: #{failed_count}" if failed_count > 0
+  end
+  
   desc "Recreate agent for a specific persona (force)"
   task :recreate_agent, [:persona_id] => :environment do |t, args|
     persona_id = args[:persona_id]

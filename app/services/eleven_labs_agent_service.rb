@@ -54,6 +54,72 @@ class ElevenLabsAgentService
     end
   end
 
+  def update_agent(agent_id, persona)
+    begin
+      # Generate updated configuration
+      agent_config = build_agent_configuration(persona)
+      
+      # Update agent via ElevenLabs API using PATCH
+      response = self.class.patch(
+        "/convai/agents/#{agent_id}",
+        headers: headers,
+        body: agent_config.to_json
+      )
+      
+      if response.success?
+        agent_data = response.parsed_response
+        
+        Rails.logger.info('elevenlabs_agent_updated',
+          agent_id: agent_id,
+          persona_name: persona.name
+        )
+        
+        {
+          success: true,
+          agent_id: agent_data['agent_id'] || agent_id,
+          prompt: agent_config[:conversation_config][:agent][:prompt][:prompt],
+          message: "Agent updated successfully"
+        }
+      else
+        Rails.logger.error('elevenlabs_agent_update_failed',
+          status_code: response.code,
+          response_body: response.body,
+          agent_id: agent_id
+        )
+        
+        # If update fails with 404 or certain errors, try recreating
+        if response.code == 404 || response.code == 400
+          Rails.logger.info('elevenlabs_agent_update_fallback_to_recreate',
+            agent_id: agent_id,
+            reason: "Update failed with #{response.code}, attempting recreation"
+          )
+          
+          # Delete the old agent (ignore errors)
+          delete_agent(agent_id)
+          
+          # Create a new agent
+          create_agent_for_persona(persona)
+        else
+          {
+            success: false,
+            error: "Failed to update agent: #{response.code} - #{response.message}"
+          }
+        end
+      end
+      
+    rescue StandardError => e
+      Rails.logger.error('elevenlabs_agent_update_error',
+        error: e.message,
+        backtrace: e.backtrace&.first(3),
+        agent_id: agent_id
+      )
+      {
+        success: false,
+        error: e.message
+      }
+    end
+  end
+
   def delete_agent(agent_id)
     begin
       # Delete agent via ElevenLabs API
@@ -151,6 +217,7 @@ class ElevenLabsAgentService
     voice_id = persona.voice_id
     prompt = generate_base_prompt(persona)
     voice_settings = generate_voice_settings(persona)
+    first_message = generate_first_message(persona)
     
     {
       name: "#{persona.name} - Land Seller Agent",
@@ -159,7 +226,7 @@ class ElevenLabsAgentService
           prompt: {
             prompt: prompt
           },
-          first_message: "Hello?",
+          first_message: first_message,
           language: "en"
         },
         tts: {
@@ -216,5 +283,33 @@ class ElevenLabsAgentService
       style: 0.5,
       use_speaker_boost: true
     }
+  end
+
+  def generate_first_message(persona)
+    characteristics = persona.characteristics
+    
+    # Extract relevant personality traits with safe defaults
+    temper_level = characteristics.dig('temper_level', 'score') || 0.5
+    skepticism_level = characteristics.dig('skepticism_level', 'score') || 0.5
+    chattiness_level = characteristics.dig('chattiness_level', 'score') || 0.5
+    
+    # Generate contextually appropriate first message based on personality
+    # The AI is answering the phone, so messages should reflect picking up
+    if temper_level > 0.7
+      # High temper - more abrupt/annoyed when answering
+      ["Yeah?", "What?", "What is it?", "Yeah, what do you want?"].sample
+    elsif skepticism_level > 0.7
+      # High skepticism - cautious when answering unknown number
+      ["Hello?", "Hello... who's this?", "Yes?", "Who's calling?"].sample
+    elsif chattiness_level > 0.7
+      # High chattiness - more friendly/open when answering
+      ["Hello!", "Hi there!", "Hello, this is #{persona.name}!", "Hey there!"].sample
+    elsif temper_level < 0.3 && chattiness_level > 0.5
+      # Low temper, moderate chattiness - polite greeting
+      ["Hello?", "Hello, who's calling please?", "Hi, can I help you?", "Yes, hello?"].sample
+    else
+      # Default - neutral phone answering variations
+      ["Hello?", "Yes?", "Yeah?", "Hello..."].sample
+    end
   end
 end
