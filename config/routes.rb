@@ -20,9 +20,6 @@ Rails.application.routes.draw do
         post :complete
       end
     end
-    
-    # ElevenLabs integration
-    post 'elevenlabs/session_token', to: 'elevenlabs#session_token'
   end
 
   # Defines the root path route ("/")
