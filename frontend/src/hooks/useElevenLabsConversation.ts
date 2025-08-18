@@ -6,6 +6,9 @@ interface ElevenLabsSessionResponse {
   token: string
   conversation_id: string
   agent_id: string
+  dynamic_variables: {
+    land_parcel_sub_details: string
+  }
 }
 
 interface ConversationMetrics {
@@ -19,8 +22,8 @@ interface ConversationMetrics {
 interface UseElevenLabsConversationProps {
   onConnect?: () => void
   onDisconnect?: () => void
-  onError?: (error: any) => void
-  onMessage?: (message: any) => void
+  onError?: (error: Error) => void
+  onMessage?: (message: unknown) => void
 }
 
 export function useElevenLabsConversation({
@@ -117,26 +120,27 @@ export function useElevenLabsConversation({
       
       // Get ElevenLabs session token from backend
       const sessionResponse = await apiClient.post<ElevenLabsSessionResponse>(
-        '/elevenlabs/session_token',
-        { training_session_id: trainingSessionId }
+        `/training_sessions/${trainingSessionId}/start_conversation`
       )
       
       setSessionData(sessionResponse)
       
-      // Start ElevenLabs conversation with the token
+      // Start ElevenLabs conversation with the token and dynamic variables
       await conversation.startSession({
         agentId: sessionResponse.agent_id,
         conversationToken: sessionResponse.token,
-        connectionType: 'webrtc' // Use WebRTC for lowest latency
+        connectionType: 'webrtc', // Use WebRTC for lowest latency
+        dynamicVariables: sessionResponse.dynamic_variables
       })
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsConnecting(false)
       
       // Handle specific error types
-      if (error.name === 'NotAllowedError') {
+      const errorObj = error as Error & { response?: { status: number } }
+      if (errorObj.name === 'NotAllowedError') {
         onError?.(new Error('Microphone access is required for voice training sessions'))
-      } else if (error.response?.status === 422) {
+      } else if (errorObj.response?.status === 422) {
         onError?.(new Error('This training session cannot be started. Please try creating a new session.'))
       } else {
         onError?.(new Error('Failed to start voice conversation. Please try again.'))

@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     resources :training_sessions, only: [:index, :create, :show] do
       member do
         post :complete
+        post :start_conversation
       end
     end
   end

@@ -182,7 +182,7 @@ class ElevenLabsAgentService
     formatted_characteristics = format_all_characteristics(characteristics)
     
     # Use the prompt template from constants
-    Prompts::PERSONA_BASE_PROMPT
+    Prompts::LAND_PERSONA_BASE_PROMPT
       .gsub('{persona_name}', persona.name)
       .gsub('{persona_description}', persona.description)
       .gsub('{characteristics}', formatted_characteristics)
