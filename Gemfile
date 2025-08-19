@@ -45,6 +45,9 @@ gem "oj"
 
 gem "httparty"
 
+# OpenAI for GPT-4 integration
+gem "ruby-openai"
+
 # Structured logging with JSON format
 gem "rails_semantic_logger"
 gem "amazing_print"
