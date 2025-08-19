@@ -87,6 +87,15 @@ class Api::TrainingSessionsController < ApplicationController
     update_params[:elevenlabs_conversation_id] = params[:elevenlabs_conversation_id] if params[:elevenlabs_conversation_id].present?
     @training_session.update!(update_params)
 
+    # Log feedback generation started
+    Logger.log_info('feedback_generation_started', 
+      user_id: current_user.id,
+      use_posthog: true,
+      training_session_id: @training_session.id,
+      persona_id: @training_session.persona_id,
+      elevenlabs_conversation_id: params[:elevenlabs_conversation_id]
+    )
+
     # Queue the feedback generation job
     TrainingSessionFeedbackJob.perform_later(@training_session.id)
 
@@ -109,7 +118,9 @@ class Api::TrainingSessionsController < ApplicationController
     user_id = current_user.clerk_user_id || current_user.id.to_s
     
     # Log the session creation attempt
-    logger.info('elevenlabs_session_start', 
+    Logger.log_info('elevenlabs_session_start', 
+      user_id: current_user.id,
+      use_posthog: true,
       persona: persona.name, 
       agent_id: persona.elevenlabs_agent_id,
       training_session_id: training_session.id
@@ -120,7 +131,9 @@ class Api::TrainingSessionsController < ApplicationController
     result = service.create_conversation_session(persona.elevenlabs_agent_id, user_id)
     
     if result[:success]
-      logger.info('elevenlabs_session_created', 
+      Logger.log_info('elevenlabs_session_created', 
+        user_id: current_user.id,
+        use_posthog: true,
         conversation_id: result[:conversation_id],
         persona: persona.name
       )

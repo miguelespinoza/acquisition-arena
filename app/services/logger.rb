@@ -1,5 +1,5 @@
-# app/services/analytics_service.rb
-class AnalyticsService
+# app/services/logger.rb
+class Logger
   def self.track(event, user_id: nil, properties: {})
     return unless user_id.present? # Only track authenticated users
     return unless Rails.env.production? # Only track in production
@@ -28,5 +28,19 @@ class AnalyticsService
     })
   rescue => e
     Rails.logger.error "Analytics user identification failed: #{e.message}"
+  end
+
+  # Helper method to log info messages with optional PostHog tracking
+  def self.log_info(message, user_id: nil, use_posthog: false, **payload)
+    # Always log to Rails logger
+    Rails.logger.info(message, payload.merge(user_id: user_id).compact)
+    
+    # Optionally also track to PostHog when explicitly requested
+    if use_posthog && user_id.present?
+      track('rails_log_info', user_id: user_id, properties: payload.merge(
+        message: message,
+        level: 'info'
+      ))
+    end
   end
 end

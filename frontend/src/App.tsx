@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
 import HomePage from './pages/HomePage'
@@ -7,9 +8,18 @@ import CreateSessionPage from './pages/CreateSessionPage'
 import SessionPage from './pages/SessionPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PrototypeHome001 from './prototypes/prototype-001/PrototypeHome001'
+import { useLoggerUser, initializePostHog } from './lib/logger'
 
 function App() {
   const isDevelopment = import.meta.env.MODE === 'development'
+  
+  // Initialize PostHog and set up global user tracking
+  useEffect(() => {
+    initializePostHog()
+  }, [])
+  
+  // This hook will automatically identify users when they log in/out
+  useLoggerUser()
 
   return (
     <Router>

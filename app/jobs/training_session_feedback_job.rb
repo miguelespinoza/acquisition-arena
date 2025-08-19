@@ -26,17 +26,19 @@ class TrainingSessionFeedbackJob < ApplicationJob
       )
       
       # Log feedback generation completed
-      logger.info('feedback_generation_completed', 
-        training_session_id: training_session_id,
+      Logger.log_info('feedback_generation_completed', 
         user_id: training_session.user_id,
+        use_posthog: true,
+        training_session_id: training_session_id,
         feedback_score: feedback[:score],
         session_duration: conversation_data[:duration]
       )
       
       # Log training session completed
-      logger.info('training_session_completed', 
-        training_session_id: training_session_id,
+      Logger.log_info('training_session_completed', 
         user_id: training_session.user_id,
+        use_posthog: true,
+        training_session_id: training_session_id,
         persona_id: training_session.persona_id,
         parcel_id: training_session.parcel_id,
         final_score: feedback[:score],

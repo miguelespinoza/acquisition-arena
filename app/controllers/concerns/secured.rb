@@ -27,7 +27,7 @@ module Secured
       )
       
       # Track user signup
-      AnalyticsService.track('user_signed_up', 
+      Logger.track('user_signed_up', 
         user_id: @current_user.id,
         properties: {
           clerk_user_id: clerk_user_id,

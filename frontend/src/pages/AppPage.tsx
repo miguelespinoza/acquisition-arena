@@ -6,6 +6,7 @@ import { FeedbackModal } from '@/components/FeedbackModal'
 import InviteCodeModal from '@/components/InviteCodeModal'
 import Dashboard from '@/components/Dashboard'
 import { useApiClient, type UserProfile, type TrainingSession } from '@/lib/api'
+import { track, Events } from '@/lib/logger'
 
 interface Statistics {
   total_sessions: number
@@ -31,6 +32,7 @@ export default function AppPage() {
   const handleLogout = async () => {
     try {
       await signOut()
+      track(Events.USER_LOGGED_OUT)
     } catch (error) {
       console.error('Failed to sign out:', error)
     }
