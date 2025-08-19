@@ -8,14 +8,14 @@ import CreateSessionPage from './pages/CreateSessionPage'
 import SessionPage from './pages/SessionPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PrototypeHome001 from './prototypes/prototype-001/PrototypeHome001'
-import { useLoggerUser, initializePostHog } from './lib/logger'
+import { useLoggerUser, initializeLogger } from './lib/logger'
 
 function App() {
   const isDevelopment = import.meta.env.MODE === 'development'
   
-  // Initialize PostHog and set up global user tracking
+  // Initialize PostHog, Rollbar and set up global user tracking
   useEffect(() => {
-    initializePostHog()
+    initializeLogger()
   }, [])
   
   // This hook will automatically identify users when they log in/out

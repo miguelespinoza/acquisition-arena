@@ -47,17 +47,17 @@ class TrainingSessionFeedbackJob < ApplicationJob
     else
       # Mark as failed if we couldn't get transcript
       training_session.update!(status: 'failed')
-      logger.error('feedback_generation_failed', 
-        training_session_id: training_session_id,
+      Logger.capture_error('feedback_generation_failed', 
         user_id: training_session.user_id,
+        training_session_id: training_session_id,
         error: 'Failed to fetch transcript'
       )
     end
   rescue StandardError => e
-    logger.error('feedback_generation_failed', 
-      training_session_id: training_session_id,
+    Logger.capture_error('feedback_generation_failed', 
+      exception: e,
       user_id: training_session&.user_id,
-      error: e.message
+      training_session_id: training_session_id
     )
     training_session&.update!(status: 'failed')
     raise
@@ -143,7 +143,7 @@ class TrainingSessionFeedbackJob < ApplicationJob
         text: feedback_text
       }
     rescue JSON::ParserError => e
-      logger.error "Failed to parse GPT-4 response: #{e.message}"
+      Logger.capture_error("Failed to parse GPT-4 response", exception: e)
       {
         score: 0,
         text: "Unable to generate feedback at this time. Please try again later."

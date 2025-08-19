@@ -47,7 +47,7 @@ module Secured
 
     @current_user
   rescue ActiveRecord::RecordInvalid, PG::UniqueViolation, StandardError => e
-    Rails.logger.error "Error finding/creating user: #{e.message}"
+    Logger.capture_error("Error finding/creating user", exception: e, clerk_user_id: clerk_user_id)
     User.find_by(clerk_user_id: clerk_user_id) if defined?(clerk_user_id) && clerk_user_id.present?
   end
 end

@@ -1,7 +1,34 @@
-// Logger utility for development and PostHog integration
+// Logger utility for development, PostHog, and Rollbar integration
 import posthog from 'posthog-js'
+import Rollbar from 'rollbar'
 import { useEffect } from 'react'
 import { useUser } from '@clerk/clerk-react'
+
+// Initialize Rollbar
+let rollbar: Rollbar | null = null
+
+export const initializeRollbar = () => {
+  if (typeof window !== 'undefined') {
+    const accessToken = import.meta.env.VITE_ROLLBAR_ACCESS_TOKEN
+    
+    if (accessToken) {
+      rollbar = new Rollbar({
+        accessToken,
+        environment: import.meta.env.MODE,
+        captureUncaught: true,
+        captureUnhandledRejections: true,
+        payload: {
+          client: {
+            javascript: {
+              code_version: '1.0.0',
+              source_map_enabled: true,
+            }
+          }
+        }
+      })
+    }
+  }
+}
 
 export const initializePostHog = () => {
   if (typeof window !== 'undefined') {
@@ -19,6 +46,12 @@ export const initializePostHog = () => {
       })
     }
   }
+}
+
+// Initialize both services
+export const initializeLogger = () => {
+  initializeRollbar()
+  initializePostHog()
 }
 
 export enum Events {
@@ -77,6 +110,15 @@ export const captureError = (message: string, error?: Error, properties: Record<
     console.error(`[${new Date().toISOString()}] ERROR:`, errorData)
   }
 
+  // Send to Rollbar if available
+  if (rollbar) {
+    if (error) {
+      rollbar.error(error, properties)
+    } else {
+      rollbar.error(message, properties)
+    }
+  }
+
   // Track errors in PostHog
   if (typeof window !== 'undefined') {
     posthog.capture('$exception', errorData)
@@ -89,23 +131,47 @@ export const debug = (message: string, properties: Record<string, unknown> = {})
   }
 }
 
-// PostHog User Identification Hook
+// User Identification Hook for both PostHog and Rollbar
 export const useLoggerUser = () => {
   const { user, isLoaded } = useUser()
 
   useEffect(() => {
     if (isLoaded && user) {
-      // Identify user in PostHog
-      posthog.identify(user.id, {
+      const userData = {
         id: user.id,
         distinct_id: user.id,
         email: user.emailAddresses[0]?.emailAddress,
         first_name: user.firstName,
         last_name: user.lastName,
-      })
+      }
+
+      // Identify user in PostHog
+      posthog.identify(user.id, userData)
+
+      // Set user context in Rollbar
+      if (rollbar) {
+        rollbar.configure({
+          payload: {
+            person: {
+              id: user.id,
+              email: userData.email,
+              username: userData.email,
+            }
+          }
+        })
+      }
     } else if (isLoaded && !user) {
       // Reset PostHog when user logs out
       posthog.reset()
+      
+      // Clear Rollbar user context
+      if (rollbar) {
+        rollbar.configure({
+          payload: {
+            person: undefined
+          }
+        })
+      }
     }
   }, [user, isLoaded])
 

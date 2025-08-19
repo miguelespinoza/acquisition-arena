@@ -51,6 +51,9 @@ gem "ruby-openai"
 # PostHog analytics
 gem "posthog-ruby"
 
+# Error tracking with Rollbar
+gem "rollbar"
+
 # Structured logging with JSON format
 gem "rails_semantic_logger"
 gem "amazing_print"

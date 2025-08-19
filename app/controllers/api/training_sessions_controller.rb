@@ -138,7 +138,8 @@ class Api::TrainingSessionsController < ApplicationController
         persona: persona.name
       )
     else
-      logger.error('elevenlabs_session_failed', 
+      Logger.capture_error('elevenlabs_session_failed', 
+        user_id: current_user.id,
         error: result[:error],
         persona: persona.name,
         agent_id: persona.elevenlabs_agent_id
@@ -147,9 +148,9 @@ class Api::TrainingSessionsController < ApplicationController
     
     result
   rescue StandardError => e
-    logger.error('elevenlabs_session_error', 
-      error: e.message,
-      backtrace: e.backtrace&.first(3),
+    Logger.capture_error('elevenlabs_session_error', 
+      exception: e,
+      user_id: current_user.id,
       persona: persona.name
     )
     {

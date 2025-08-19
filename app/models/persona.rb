@@ -28,7 +28,7 @@ class Persona < ApplicationRecord
       )
       Rails.logger.info "Created ElevenLabs agent #{result[:agent_id]} for persona #{name}"
     else
-      Rails.logger.error "Failed to create ElevenLabs agent for persona #{name}: #{result[:error]}"
+      Logger.capture_error("Failed to create ElevenLabs agent for persona #{name}", error: result[:error], persona_id: id)
       raise StandardError, "Failed to create ElevenLabs agent: #{result[:error]}"
     end
     
