@@ -205,6 +205,56 @@ class ElevenLabsAgentService
     end
   end
   
+  def get_conversation_transcript(conversation_id)
+    begin
+      # Get conversation details including transcript
+      response = self.class.get(
+        "/convai/conversations/#{conversation_id}",
+        headers: headers
+      )
+      
+      if response.success?
+        conversation_data = response.parsed_response
+        
+        # Extract transcript from the response
+        transcript = conversation_data['transcript'] || []
+        
+        Rails.logger.info('elevenlabs_transcript_fetched',
+          conversation_id: conversation_id,
+          message_count: transcript.length
+        )
+        
+        {
+          success: true,
+          transcript: transcript,
+          status: conversation_data['status'],
+          metadata: conversation_data['metadata']
+        }
+      else
+        Rails.logger.error('elevenlabs_transcript_fetch_failed',
+          status_code: response.code,
+          response_body: response.body,
+          conversation_id: conversation_id
+        )
+        {
+          success: false,
+          error: "Failed to get conversation transcript: #{response.code}"
+        }
+      end
+      
+    rescue StandardError => e
+      Rails.logger.error('elevenlabs_transcript_error',
+        error: e.message,
+        backtrace: e.backtrace&.first(3),
+        conversation_id: conversation_id
+      )
+      {
+        success: false,
+        error: e.message
+      }
+    end
+  end
+  
   
   private
   
