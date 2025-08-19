@@ -13,7 +13,7 @@ export default function Footer() {
             <img 
               src="/mobile-planet.png" 
               alt="Crafted AI" 
-              className="w-[32px] h-[32px]"
+              className="w-[28px] h-[20px]"
             />
             <span 
               className="text-sm font-medium"
