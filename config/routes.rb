@@ -19,6 +19,7 @@ Rails.application.routes.draw do
       member do
         post :complete
         post :start_conversation
+        post :end_conversation
       end
     end
     

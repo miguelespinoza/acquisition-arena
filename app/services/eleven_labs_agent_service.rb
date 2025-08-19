@@ -173,9 +173,11 @@ class ElevenLabsAgentService
       
       if response.success?
         token_data = response.parsed_response
+        
         {
           success: true,
-          conversation_id: "webrtc_#{Time.current.to_i}_#{SecureRandom.hex(8)}", # Generate unique ID
+          # Note: conversation_id is NOT available at token generation time
+          # It will be provided by the client after WebRTC connection is established
           signed_url: token_data['token']
         }
       else

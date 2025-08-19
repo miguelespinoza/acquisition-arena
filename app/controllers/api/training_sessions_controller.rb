@@ -1,5 +1,5 @@
 class Api::TrainingSessionsController < ApplicationController
-  before_action :set_training_session, only: [:show, :complete, :start_conversation]
+  before_action :set_training_session, only: [:show, :complete, :start_conversation, :end_conversation]
 
   def index
     sessions = current_user.training_sessions.includes(:persona, :parcel)
@@ -66,7 +66,6 @@ class Api::TrainingSessionsController < ApplicationController
 
       render json: { 
         token: result[:signed_url],
-        conversation_id: result[:conversation_id],
         agent_id: persona.elevenlabs_agent_id,
         dynamic_variables: {
           land_parcel_sub_details: parcel_details
@@ -75,6 +74,24 @@ class Api::TrainingSessionsController < ApplicationController
     else
       render json: { error: result[:error] }, status: :unprocessable_entity
     end
+  end
+
+  def end_conversation
+    if @training_session.status != 'active'
+      render json: { error: 'Session is not active' }, status: :bad_request
+      return
+    end
+
+    # Update status and store the ElevenLabs conversation ID
+    update_params = { status: 'generating_feedback' }
+    update_params[:elevenlabs_conversation_id] = params[:elevenlabs_conversation_id] if params[:elevenlabs_conversation_id].present?
+    @training_session.update!(update_params)
+
+    # Queue the feedback generation job
+    TrainingSessionFeedbackJob.perform_later(@training_session.id)
+
+    # Return the updated session
+    render json: TrainingSessionBlueprint.render(@training_session)
   end
 
   private
