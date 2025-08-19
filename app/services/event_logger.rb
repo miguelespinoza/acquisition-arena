@@ -1,4 +1,4 @@
-# app/services/logger.rb
+# app/services/event_logger.rb
 class EventLogger
   def self.track(event, user_id: nil, properties: {})
     return unless user_id.present? # Only track authenticated users
