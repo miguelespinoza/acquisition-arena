@@ -27,7 +27,7 @@ module Secured
       )
       
       # Track user signup
-      Logger.track('user_signed_up', 
+      EventLogger.track('user_signed_up', 
         user_id: @current_user.id,
         properties: {
           clerk_user_id: clerk_user_id,
@@ -47,7 +47,7 @@ module Secured
 
     @current_user
   rescue ActiveRecord::RecordInvalid, PG::UniqueViolation, StandardError => e
-    Logger.capture_error("Error finding/creating user", exception: e, clerk_user_id: clerk_user_id)
+    EventLogger.capture_error("Error finding/creating user", exception: e, clerk_user_id: clerk_user_id)
     User.find_by(clerk_user_id: clerk_user_id) if defined?(clerk_user_id) && clerk_user_id.present?
   end
 end

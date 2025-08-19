@@ -42,7 +42,7 @@ class TrainingSession < ApplicationRecord
       
       transcript
     else
-      Logger.capture_error("Failed to get transcript", error: result[:error], training_session_id: id, user_id: user_id)
+      EventLogger.capture_error("Failed to get transcript", error: result[:error], training_session_id: id, user_id: user_id)
       nil
     end
   end

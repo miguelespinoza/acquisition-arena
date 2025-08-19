@@ -88,7 +88,7 @@ class Api::TrainingSessionsController < ApplicationController
     @training_session.update!(update_params)
 
     # Log feedback generation started
-    Logger.log_info('feedback_generation_started', 
+    EventLogger.log_info('feedback_generation_started', 
       user_id: current_user.id,
       use_posthog: true,
       training_session_id: @training_session.id,
@@ -118,7 +118,7 @@ class Api::TrainingSessionsController < ApplicationController
     user_id = current_user.clerk_user_id || current_user.id.to_s
     
     # Log the session creation attempt
-    Logger.log_info('elevenlabs_session_start', 
+    EventLogger.log_info('elevenlabs_session_start', 
       user_id: current_user.id,
       use_posthog: true,
       persona: persona.name, 
@@ -131,14 +131,14 @@ class Api::TrainingSessionsController < ApplicationController
     result = service.create_conversation_session(persona.elevenlabs_agent_id, user_id)
     
     if result[:success]
-      Logger.log_info('elevenlabs_session_created', 
+      EventLogger.log_info('elevenlabs_session_created', 
         user_id: current_user.id,
         use_posthog: true,
         conversation_id: result[:conversation_id],
         persona: persona.name
       )
     else
-      Logger.capture_error('elevenlabs_session_failed', 
+      EventLogger.capture_error('elevenlabs_session_failed', 
         user_id: current_user.id,
         error: result[:error],
         persona: persona.name,
@@ -148,7 +148,7 @@ class Api::TrainingSessionsController < ApplicationController
     
     result
   rescue StandardError => e
-    Logger.capture_error('elevenlabs_session_error', 
+    EventLogger.capture_error('elevenlabs_session_error', 
       exception: e,
       user_id: current_user.id,
       persona: persona.name

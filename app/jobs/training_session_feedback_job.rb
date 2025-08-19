@@ -26,7 +26,7 @@ class TrainingSessionFeedbackJob < ApplicationJob
       )
       
       # Log feedback generation completed
-      Logger.log_info('feedback_generation_completed', 
+      EventLogger.log_info('feedback_generation_completed', 
         user_id: training_session.user_id,
         use_posthog: true,
         training_session_id: training_session_id,
@@ -35,7 +35,7 @@ class TrainingSessionFeedbackJob < ApplicationJob
       )
       
       # Log training session completed
-      Logger.log_info('training_session_completed', 
+      EventLogger.log_info('training_session_completed', 
         user_id: training_session.user_id,
         use_posthog: true,
         training_session_id: training_session_id,
@@ -47,14 +47,14 @@ class TrainingSessionFeedbackJob < ApplicationJob
     else
       # Mark as failed if we couldn't get transcript
       training_session.update!(status: 'failed')
-      Logger.capture_error('feedback_generation_failed', 
+      EventLogger.capture_error('feedback_generation_failed', 
         user_id: training_session.user_id,
         training_session_id: training_session_id,
         error: 'Failed to fetch transcript'
       )
     end
   rescue StandardError => e
-    Logger.capture_error('feedback_generation_failed', 
+    EventLogger.capture_error('feedback_generation_failed', 
       exception: e,
       user_id: training_session&.user_id,
       training_session_id: training_session_id
@@ -143,7 +143,7 @@ class TrainingSessionFeedbackJob < ApplicationJob
         text: feedback_text
       }
     rescue JSON::ParserError => e
-      Logger.capture_error("Failed to parse GPT-4 response", exception: e)
+      EventLogger.capture_error("Failed to parse GPT-4 response", exception: e)
       {
         score: 0,
         text: "Unable to generate feedback at this time. Please try again later."

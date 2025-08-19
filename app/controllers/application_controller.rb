@@ -11,6 +11,6 @@ class ApplicationController < ActionController::API
   end
 
   def set_analytics_user
-    Logger.set_user(current_user)
+    EventLogger.set_user(current_user)
   end
 end

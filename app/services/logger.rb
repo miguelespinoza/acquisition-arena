@@ -1,5 +1,5 @@
 # app/services/logger.rb
-class Logger
+class EventLogger
   def self.track(event, user_id: nil, properties: {})
     return unless user_id.present? # Only track authenticated users
     return unless Rails.env.production? # Only track in production
