@@ -23,8 +23,25 @@ class Api::UsersController < ApplicationController
         sessions_remaining: 5
       )
       
+      # Track successful invite redemption
+      EventLogger.track('invite_code_redeemed', 
+        user_id: current_user.id,
+        properties: {
+          invite_code: valid_invite_code,
+          sessions_granted: 5
+        }
+      )
+      
       render json: { valid: true, message: 'Invite code redeemed successfully!' }
     else
+      # Track failed invite attempt
+      EventLogger.log_info('invite_code_failed', 
+        user_id: current_user.id,
+        use_posthog: true,
+        attempted_code: invite_code,
+        valid_code: valid_invite_code
+      )
+      
       render json: { valid: false, error: 'Invalid invite code' }, status: :unprocessable_entity
     end
   end
