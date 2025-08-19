@@ -11,7 +11,7 @@ class TrainingSessionFeedbackJob < ApplicationJob
       # Save transcript and duration
       training_session.update!(
         conversation_transcript: conversation_data[:transcript],
-        session_duration: conversation_data[:duration]
+        session_duration_in_seconds: conversation_data[:duration]
       )
       
       # Generate feedback using GPT-4
