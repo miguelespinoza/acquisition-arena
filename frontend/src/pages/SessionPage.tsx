@@ -91,16 +91,20 @@ export default function SessionPage() {
   }, [cleanup])
 
   const handleEndSession = useCallback(async () => {
-    if (conversationStatus === 'connected') {
+    if (session?.status === 'completed') {
+      // If session is already completed, just navigate to dashboard
+      navigate('/')
+    } else if (conversationStatus === 'connected') {
       const confirmed = window.confirm(
         'Are you sure you want to end this training session? Your progress will be saved.'
       )
       if (!confirmed) return
       
       await endConversation()
+    } else {
+      navigate('/')
     }
-    navigate('/')
-  }, [conversationStatus, endConversation, navigate])
+  }, [conversationStatus, endConversation, navigate, session?.status])
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     setVolume(newVolume)
@@ -147,7 +151,7 @@ export default function SessionPage() {
             <p className="text-red-600 mb-4">The training session could not be loaded.</p>
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
             >
               Return Home
             </button>
@@ -173,9 +177,9 @@ export default function SessionPage() {
           </div>
           <button
             onClick={handleEndSession}
-            className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+            className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
           >
-            End Session
+            {session?.status === 'completed' ? 'Go to Dashboard' : 'End Session'}
           </button>
         </div>
 
@@ -191,7 +195,6 @@ export default function SessionPage() {
                   grade={session.feedbackGrade}
                   feedbackText={session.feedbackText}
                   isGenerating={session.status === 'generating_feedback'}
-                  onRefresh={() => mutate()}
                 />
                 {/* Embedded Feedback Form - always rendered but hidden until feedback is generated */}
                 <FeedbackModal
@@ -331,7 +334,7 @@ export default function SessionPage() {
                   <div className="flex justify-center mt-8">
                     <button 
                       onClick={handleEndSession}
-                      className="p-4 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors group"
+                      className="p-4 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors group cursor-pointer"
                       title="End training session"
                     >
                       <PhoneOff className="w-6 h-6" />
@@ -354,7 +357,7 @@ export default function SessionPage() {
                           setMicrophoneConfigured(false) // Go back to mic selection
                         }
                       }}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                     >
                       Try Again
                     </button>
