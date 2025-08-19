@@ -50,6 +50,11 @@ export default function Dashboard({ trainingSessions, statistics, userName, sess
           <div className="text-sm font-medium text-gray-500 mb-1">Total Sessions</div>
           <div className="text-3xl font-bold text-gray-900">
             {statistics.total_sessions}
+            {sessionsRemaining !== undefined && (
+              <span className="text-base font-normal text-gray-600 ml-1">
+                out of {statistics.total_sessions + sessionsRemaining}
+              </span>
+            )}
           </div>
         </div>
         
