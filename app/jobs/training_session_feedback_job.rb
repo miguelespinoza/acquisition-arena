@@ -4,15 +4,18 @@ class TrainingSessionFeedbackJob < ApplicationJob
   def perform(training_session_id)
     training_session = TrainingSession.find(training_session_id)
     
-    # Fetch transcript from ElevenLabs
-    transcript = fetch_transcript_from_elevenlabs(training_session)
+    # Fetch transcript and metadata from ElevenLabs
+    conversation_data = get_conversation_transcript_and_duration(training_session)
     
-    if transcript
-      # Save transcript
-      training_session.update!(conversation_transcript: transcript)
+    if conversation_data
+      # Save transcript and duration
+      training_session.update!(
+        conversation_transcript: conversation_data[:transcript],
+        session_duration: conversation_data[:duration]
+      )
       
       # Generate feedback using GPT-4
-      feedback = generate_feedback(transcript, training_session)
+      feedback = generate_feedback(conversation_data[:transcript], training_session)
       
       # Save feedback
       training_session.update!(
@@ -36,7 +39,8 @@ class TrainingSessionFeedbackJob < ApplicationJob
 
   private
 
-  def fetch_transcript_from_elevenlabs(training_session)
+  # Get conversation transcript and duration from ElevenLabs API
+  def get_conversation_transcript_and_duration(training_session)
     unless training_session.elevenlabs_conversation_id.present?
       logger.error "No ElevenLabs conversation ID found for training session #{training_session.id}"
       return nil
@@ -49,7 +53,14 @@ class TrainingSessionFeedbackJob < ApplicationJob
     
     if result[:success]
       logger.info "Successfully fetched transcript with #{result[:transcript]&.length || 0} messages"
-      format_transcript(result[:transcript])
+      
+      # Extract duration from metadata
+      duration = result[:metadata]&.dig('call_duration_secs') || result[:metadata]&.dig(:call_duration_secs)
+      
+      {
+        transcript: format_transcript(result[:transcript]),
+        duration: duration
+      }
     else
       logger.error "Failed to fetch transcript: #{result[:error]}"
       nil
