@@ -3,5 +3,7 @@
 class UserBlueprint < Blueprinter::Base
   identifier :id
 
-  fields :clerk_user_id, :sessions_remaining, :invite_code, :invite_code_redeemed, :created_at, :updated_at
+  fields :clerk_user_id, :first_name, :last_name, 
+         :sessions_remaining, :invite_code_redeemed, 
+         :created_at, :updated_at
 end

@@ -20,8 +20,10 @@ end
 #
 #  id                   :uuid             not null, primary key
 #  email_address        :string
+#  first_name           :string
 #  invite_code          :string
 #  invite_code_redeemed :boolean
+#  last_name            :string
 #  sessions_remaining   :integer
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
