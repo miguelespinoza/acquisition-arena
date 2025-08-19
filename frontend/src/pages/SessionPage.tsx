@@ -11,6 +11,7 @@ import { Settings, User, MapPin, BarChart3, X, PhoneOff, AlertCircle } from 'luc
 import toast from 'react-hot-toast'
 import { FeedbackDisplay } from '@/components/FeedbackDisplay'
 import { FeedbackModal } from '@/components/FeedbackModal'
+import { track, Events, captureError } from '@/lib/logger'
 
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
@@ -100,11 +101,16 @@ export default function SessionPage() {
       )
       if (!confirmed) return
       
+      track(Events.TRAINING_SESSION_ENDED, {
+        session_id: id,
+        persona_id: session?.persona?.id,
+        parcel_id: session?.parcel?.id
+      })
       await endConversation()
     } else {
       navigate('/')
     }
-  }, [conversationStatus, endConversation, navigate, session?.status])
+  }, [conversationStatus, endConversation, navigate, session?.status, id, session?.persona?.id, session?.parcel?.id])
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     setVolume(newVolume)
@@ -213,7 +219,13 @@ export default function SessionPage() {
               {!microphoneConfigured && session?.status === 'pending' ? (
                 <MicrophoneSelector
                   onMicrophoneSelected={setSelectedMicrophoneId}
-                  onContinue={() => setMicrophoneConfigured(true)}
+                  onContinue={() => {
+                    track(Events.MICROPHONE_CONFIGURED, {
+                      session_id: id,
+                      microphone_id: selectedMicrophoneId
+                    })
+                    setMicrophoneConfigured(true)
+                  }}
                 />
               ) : !hasAttemptedConnection.current && session?.status === 'pending' && microphoneConfigured ? (
                 <div className="space-y-6">

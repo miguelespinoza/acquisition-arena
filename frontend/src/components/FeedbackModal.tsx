@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Send } from 'lucide-react'
 import { useApiClient } from '@/lib/api'
 import toast from 'react-hot-toast'
+import { track, Events, captureError } from '@/lib/logger'
 
 interface FeedbackModalProps {
   isOpen: boolean
@@ -43,12 +44,23 @@ export function FeedbackModal({
       }
       
       await apiClient.post('/feedback', payload)
+      
+      track(Events.USER_FEEDBACK_SUBMITTED, {
+        session_id: sessionId,
+        feedback_length: feedback.trim().length,
+        has_session_context: !!sessionId
+      })
+      
       toast.success('Thank you for your feedback!')
       setFeedback('')
       if (!embedded) {
         onClose()
       }
     } catch (error) {
+      captureError('Failed to submit feedback', error instanceof Error ? error : new Error('Unknown error'), {
+        session_id: sessionId,
+        feedback_length: feedback.trim().length
+      })
       console.error('Failed to submit feedback:', error)
       toast.error('Failed to submit feedback. Please try again.')
     } finally {

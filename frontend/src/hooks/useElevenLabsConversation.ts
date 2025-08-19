@@ -1,6 +1,7 @@
 import { useConversation } from '@elevenlabs/react'
 import { useState, useCallback, useRef } from 'react'
 import { useApiClient } from '@/lib/api'
+import { track, Events, captureError } from '@/lib/logger'
 
 interface ElevenLabsSessionResponse {
   token: string
@@ -56,6 +57,11 @@ export function useElevenLabsConversation({
       // Store the conversation ID for later use
       conversationIdRef.current = props.conversationId
       
+      track(Events.VOICE_CONNECTION_ESTABLISHED, {
+        session_id: trainingSessionId,
+        conversation_id: props.conversationId
+      })
+      
       setMetrics(prev => ({ ...prev, startTime: new Date() }))
       setIsConnecting(false)
       hasEndCallBeenTriggered.current = false // Reset flag on new connection
@@ -76,6 +82,11 @@ export function useElevenLabsConversation({
       if (props?.type === 'agent_tool_response' && 
           props?.agent_tool_response?.tool_name === 'end_call' &&
           !hasEndCallBeenTriggered.current) {
+        
+        track(Events.AI_TOOL_END_CALL_TRIGGERED, {
+          session_id: trainingSessionId,
+          conversation_id: conversationIdRef.current
+        })
         
         hasEndCallBeenTriggered.current = true // Prevent multiple triggers
         
@@ -152,6 +163,11 @@ export function useElevenLabsConversation({
     },
     
     onError: (message, context) => {
+      captureError('ElevenLabs conversation error', new Error(message), {
+        session_id: trainingSessionId,
+        conversation_id: conversationIdRef.current,
+        context
+      })
       setIsConnecting(false)
       onError?.(new Error(message))
     },
@@ -225,6 +241,11 @@ export function useElevenLabsConversation({
         `/training_sessions/${trainingSessionId}/start_conversation`
       )
       
+      track(Events.TRAINING_SESSION_STARTED, {
+        session_id: trainingSessionId,
+        agent_id: sessionResponse.agent_id
+      })
+      
       setSessionData(sessionResponse)
       
       // Start ElevenLabs conversation with the token and dynamic variables
@@ -240,10 +261,19 @@ export function useElevenLabsConversation({
       // Handle specific error types
       const errorObj = error as Error & { response?: { status: number } }
       if (errorObj.name === 'NotAllowedError') {
+        captureError('Microphone permission denied', errorObj, {
+          session_id: trainingSessionId
+        })
         onError?.(new Error('Microphone access is required for voice training sessions'))
       } else if (errorObj.response?.status === 422) {
+        captureError('Training session start failed - 422', errorObj, {
+          session_id: trainingSessionId
+        })
         onError?.(new Error('This training session cannot be started. Please try creating a new session.'))
       } else {
+        captureError('Voice conversation start failed', errorObj, {
+          session_id: trainingSessionId
+        })
         onError?.(new Error('Failed to start voice conversation. Please try again.'))
       }
     }

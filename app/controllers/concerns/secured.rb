@@ -25,6 +25,16 @@ module Secured
         first_name: clerk_user.first_name,
         last_name: clerk_user.last_name
       )
+      
+      # Track user signup
+      AnalyticsService.track('user_signed_up', 
+        user_id: @current_user.id,
+        properties: {
+          clerk_user_id: clerk_user_id,
+          email: email,
+          has_name: clerk_user.first_name.present?
+        }
+      )
     else
       # Update user name if it has changed
       if @current_user.first_name != clerk_user.first_name || @current_user.last_name != clerk_user.last_name

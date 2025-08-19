@@ -6,6 +6,7 @@ import type { Persona, Parcel, TrainingSession } from '@/types'
 import toast from 'react-hot-toast'
 import { Phone, ChevronLeft, PlayCircle, Loader2 } from 'lucide-react'
 import { getPersonaAvatar } from '@/utils/avatar'
+import { track, Events, captureError } from '@/lib/logger'
 
 type Step = 'persona' | 'parcel' | 'confirm'
 
@@ -29,11 +30,21 @@ export default function CreateSessionPage() {
   )
 
   const handlePersonaSelect = (persona: Persona) => {
+    track(Events.PERSONA_SELECTED, {
+      persona_id: persona.id,
+      persona_name: persona.name
+    })
     setSelectedPersona(persona)
     setCurrentStep('parcel')
   }
 
   const handleParcelSelect = (parcel: Parcel) => {
+    track(Events.PARCEL_SELECTED, {
+      parcel_id: parcel.id,
+      parcel_number: parcel.parcelNumber,
+      city: parcel.city,
+      state: parcel.state
+    })
     setSelectedParcel(parcel)
     setCurrentStep('confirm')
   }
@@ -50,9 +61,21 @@ export default function CreateSessionPage() {
         },
       })
 
+      track(Events.TRAINING_SESSION_CREATED, {
+        session_id: session.id,
+        persona_id: selectedPersona.id,
+        persona_name: selectedPersona.name,
+        parcel_id: selectedParcel.id,
+        parcel_number: selectedParcel.parcelNumber
+      })
+
       toast.success('Training session created!')
       navigate(`/session/${session.id}`)
     } catch (error) {
+      captureError('Failed to create training session', error instanceof Error ? error : new Error('Unknown error'), {
+        persona_id: selectedPersona.id,
+        parcel_id: selectedParcel.id
+      })
       console.error('Failed to create session:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to create session')
     } finally {
