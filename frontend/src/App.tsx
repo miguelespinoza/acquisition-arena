@@ -6,8 +6,11 @@ import HomePage from './pages/HomePage'
 import CreateSessionPage from './pages/CreateSessionPage'
 import SessionPage from './pages/SessionPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import PrototypeHome001 from './prototypes/prototype-001/PrototypeHome001'
 
 function App() {
+  const isDevelopment = import.meta.env.MODE === 'development'
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
@@ -34,6 +37,17 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
+          {isDevelopment && (
+            <Route 
+              path="/prototype-001" 
+              element={
+                <ProtectedRoute>
+                  <PrototypeHome001 />
+                </ProtectedRoute>
+              } 
+            />
+          )}
         </Routes>
         <Toaster 
           position="top-right"
