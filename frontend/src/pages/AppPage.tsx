@@ -1,11 +1,14 @@
 import { useAuth, useUser } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
-import { Phone, User, MapPin, BarChart3 } from 'lucide-react'
+import { Phone, User, MapPin, BarChart3, MessageSquare } from 'lucide-react'
+import { useState } from 'react'
+import { FeedbackModal } from '@/components/FeedbackModal'
 
 export default function AppPage() {
   const { signOut } = useAuth()
   const { user } = useUser()
   const navigate = useNavigate()
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -35,12 +38,21 @@ export default function AppPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            Logout
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setIsFeedbackModalOpen(true)}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors flex items-center space-x-2"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Submit Feedback</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
 
@@ -91,6 +103,12 @@ export default function AppPage() {
           </div>
         </div>
       </div>
+      
+      {/* Feedback Modal */}
+      <FeedbackModal 
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
     </div>
   )
 }

@@ -4,7 +4,6 @@ import { useApiClient } from '@/lib/api'
 
 interface ElevenLabsSessionResponse {
   token: string
-  conversation_id: string
   agent_id: string
   dynamic_variables: {
     land_parcel_sub_details: string
@@ -20,6 +19,7 @@ interface ConversationMetrics {
 }
 
 interface UseElevenLabsConversationProps {
+  trainingSessionId?: string
   onConnect?: () => void
   onDisconnect?: () => void
   onError?: (error: Error) => void
@@ -27,6 +27,7 @@ interface UseElevenLabsConversationProps {
 }
 
 export function useElevenLabsConversation({
+  trainingSessionId,
   onConnect,
   onDisconnect,
   onError,
@@ -45,12 +46,19 @@ export function useElevenLabsConversation({
   
   const lastSpeakingChange = useRef<number>(Date.now())
   const intervalRef = useRef<NodeJS.Timeout>()
+  const hasEndCallBeenTriggered = useRef(false)
+  const endCallTimeoutRef = useRef<NodeJS.Timeout>()
+  const conversationIdRef = useRef<string | null>(null)
 
   // Initialize the base ElevenLabs conversation hook
   const conversation = useConversation({
-    onConnect: () => {
+    onConnect: (props) => {
+      // Store the conversation ID for later use
+      conversationIdRef.current = props.conversationId
+      
       setMetrics(prev => ({ ...prev, startTime: new Date() }))
       setIsConnecting(false)
+      hasEndCallBeenTriggered.current = false // Reset flag on new connection
       
       // Start tracking session duration
       intervalRef.current = setInterval(() => {
@@ -63,7 +71,65 @@ export function useElevenLabsConversation({
       onConnect?.()
     },
     
-    onDisconnect: () => {
+    onDebug: async (props) => {
+      // Check if this is an end_call tool response
+      if (props?.type === 'agent_tool_response' && 
+          props?.agent_tool_response?.tool_name === 'end_call' &&
+          !hasEndCallBeenTriggered.current) {
+        
+        hasEndCallBeenTriggered.current = true // Prevent multiple triggers
+        
+        // Clear any existing timeout
+        if (endCallTimeoutRef.current) {
+          clearTimeout(endCallTimeoutRef.current)
+        }
+        
+        // Handle the end call with a delay to allow final audio to play
+        endCallTimeoutRef.current = setTimeout(async () => {
+          try {
+            // First, notify the backend about conversation ending with the conversation ID
+            if (trainingSessionId && conversationIdRef.current) {
+              try {
+                await apiClient.post(`/training_sessions/${trainingSessionId}/end_conversation`, {
+                  elevenlabs_conversation_id: conversationIdRef.current
+                })
+              } catch (backendError) {
+                console.error('Failed to notify backend:', backendError)
+              }
+            }
+            
+            // Try to end the session if still connected
+            if (conversation.status === 'connected') {
+              try {
+                await conversation.endSession()
+              } catch (endError) {
+                console.error('Failed to end session:', endError)
+              }
+            }
+            
+            // Clear interval timer
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current)
+            }
+            
+            // Call the onDisconnect callback manually since it won't fire
+            onDisconnect?.()
+            
+          } catch (error) {
+            console.error('Error in end_call handler:', error)
+            // Even on error, call the disconnect callback
+            onDisconnect?.()
+          }
+        }, 2000) // 2 second delay to allow "goodbye" audio to finish
+      }
+    },
+    
+    onDisconnect: async () => {
+      // Check if this was already handled by end_call
+      if (hasEndCallBeenTriggered.current) {
+        return
+      }
+      
       setIsConnecting(false)
       
       // Clear duration tracking
@@ -71,26 +137,41 @@ export function useElevenLabsConversation({
         clearInterval(intervalRef.current)
       }
       
+      // Notify backend that conversation ended with the conversation ID
+      if (trainingSessionId && conversationIdRef.current) {
+        try {
+          await apiClient.post(`/training_sessions/${trainingSessionId}/end_conversation`, {
+            elevenlabs_conversation_id: conversationIdRef.current
+          })
+        } catch (error) {
+          console.error('Failed to notify conversation ended:', error)
+        }
+      }
+      
       onDisconnect?.()
     },
     
-    onError: (error) => {
+    onError: (message, context) => {
       setIsConnecting(false)
-      onError?.(error)
+      onError?.(new Error(message))
     },
     
-    onMessage: (message) => {
+    onMessage: (props) => {
       setMetrics(prev => ({ ...prev, messageCount: prev.messageCount + 1 }))
-      onMessage?.(message)
+      onMessage?.(props)
     },
     
-    onModeChange: (mode) => {
+    onAudio: (base64Audio) => {
+      // Audio received - no logging needed
+    },
+    
+    onModeChange: (prop) => {
       // Track speaking time
       const now = Date.now()
       const elapsed = now - lastSpeakingChange.current
       
       setMetrics(prev => {
-        if (mode.mode === 'speaking') {
+        if (prop.mode === 'speaking') {
           return {
             ...prev,
             userSpeakingTime: prev.userSpeakingTime + elapsed
@@ -104,10 +185,31 @@ export function useElevenLabsConversation({
       })
       
       lastSpeakingChange.current = now
+    },
+    
+    onStatusChange: (prop) => {
+      // Status changed - no logging needed
+    },
+    
+    onCanSendFeedbackChange: (prop) => {
+      // Feedback state changed - no logging needed
+    },
+    
+    onUnhandledClientToolCall: (params) => {
+      // Unhandled tool call - no logging needed
+    },
+    
+    onVadScore: (props) => {
+      // Voice activity detection - no logging needed
     }
   })
 
-  const startConversation = useCallback(async (trainingSessionId: string) => {
+  const startConversation = useCallback(async () => {
+    if (!trainingSessionId) {
+      onError?.(new Error('No training session ID provided'))
+      return
+    }
+    
     if (isConnecting || conversation.status === 'connected') {
       return
     }
@@ -132,7 +234,6 @@ export function useElevenLabsConversation({
         connectionType: 'webrtc', // Use WebRTC for lowest latency
         dynamicVariables: sessionResponse.dynamic_variables
       })
-      
     } catch (error: unknown) {
       setIsConnecting(false)
       
@@ -146,14 +247,21 @@ export function useElevenLabsConversation({
         onError?.(new Error('Failed to start voice conversation. Please try again.'))
       }
     }
-  }, [conversation, apiClient, isConnecting, onError])
+  }, [conversation, apiClient, isConnecting, onError, trainingSessionId])
 
   const endConversation = useCallback(async () => {
     if (conversation.status === 'connected') {
       await conversation.endSession()
     }
     
+    // Clear any pending end call timeout
+    if (endCallTimeoutRef.current) {
+      clearTimeout(endCallTimeoutRef.current)
+    }
+    
     setSessionData(null)
+    hasEndCallBeenTriggered.current = false
+    conversationIdRef.current = null
     setMetrics({
       startTime: null,
       duration: 0,
@@ -177,6 +285,9 @@ export function useElevenLabsConversation({
   const cleanup = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
+    }
+    if (endCallTimeoutRef.current) {
+      clearTimeout(endCallTimeoutRef.current)
     }
   }, [])
 
