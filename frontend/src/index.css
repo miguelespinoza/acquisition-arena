@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+/* Custom Font - Atkinson Hyperlegible */
+@font-face {
+  font-family: 'Atkinson Hyperlegible Mono';
+  src: url('/atkinson/AtkinsonHyperlegibleMono-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
