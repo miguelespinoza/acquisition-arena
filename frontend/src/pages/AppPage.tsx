@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { FeedbackModal } from '@/components/FeedbackModal'
 import InviteCodeModal from '@/components/InviteCodeModal'
 import Dashboard from '@/components/Dashboard'
+import Footer from '@/components/Footer'
 import { useApiClient, type UserProfile, type TrainingSession } from '@/lib/api'
 import { track, Events } from '@/lib/logger'
 
@@ -120,6 +121,8 @@ export default function AppPage() {
           sessionsRemaining={home?.user?.sessionsRemaining}
         />
       </div>
+      
+      <Footer />
       
       {/* Feedback Modal */}
       <FeedbackModal 

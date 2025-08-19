@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { User, MapPin, BarChart3 } from 'lucide-react'
+import Footer from '@/components/Footer'
 
 export default function MarketingPage() {
   const navigate = useNavigate()
@@ -94,6 +95,8 @@ export default function MarketingPage() {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   )
 }
