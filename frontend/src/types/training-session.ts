@@ -8,7 +8,7 @@ export interface TrainingSession {
   parcelId: number
   status: 'pending' | 'active' | 'generating_feedback' | 'completed' | 'failed'
   conversationTranscript: string | null
-  sessionDuration: number | null
+  sessionDurationInSeconds: number | null
   audioUrl: string | null
   elevenlabsSessionToken: string | null
   feedbackScore: number | null
