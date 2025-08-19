@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :api do
+    get 'home', to: 'home#index'
+    
     # User endpoints
     get 'user', to: 'users#profile'
     post 'user/validate_invite', to: 'users#validate_invite'
