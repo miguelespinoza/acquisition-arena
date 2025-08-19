@@ -21,8 +21,18 @@ module Secured
       
       @current_user = User.create!(
         clerk_user_id: clerk_user_id,
-        email_address: email
+        email_address: email,
+        first_name: clerk_user.first_name,
+        last_name: clerk_user.last_name
       )
+    else
+      # Update user name if it has changed
+      if @current_user.first_name != clerk_user.first_name || @current_user.last_name != clerk_user.last_name
+        @current_user.update(
+          first_name: clerk_user.first_name,
+          last_name: clerk_user.last_name
+        )
+      end
     end
 
     @current_user
