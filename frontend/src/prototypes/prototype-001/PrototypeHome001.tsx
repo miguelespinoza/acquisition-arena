@@ -1,9 +1,16 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '@clerk/clerk-react'
+import useSWR from 'swr'
+import { useApiClient } from '../../lib/api'
 import TrainingSessionCard from './TrainingSessionCard'
 import type { TrainingSession } from '../../types/training-session'
+import type { UserProfile } from '../../lib/api'
 
+interface HomeData {
+  user: UserProfile
+  training_sessions: TrainingSession[]
+}
+
+// Remove this once testing is complete
 const mockSessions: TrainingSession[] = [
   {
     id: 1,
@@ -152,34 +159,28 @@ const mockSessions: TrainingSession[] = [
 ]
 
 export default function PrototypeHome001() {
-  const { user } = useUser()
   const navigate = useNavigate()
-  const [sessions, setSessions] = useState<TrainingSession[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setTimeout(() => {
-      setSessions(mockSessions)
-      setLoading(false)
-    }, 500)
-  }, [])
+  const api = useApiClient()
+  
+  // Fetch home data including completed sessions
+  const { data: home, error, isLoading } = useSWR<HomeData>(
+    '/home',
+    () => api.get<HomeData>('/home')
+  )
+  
+  // Use real sessions if available, otherwise fall back to mock data for development
+  const sessions = home?.training_sessions || []
 
   const averageScore = sessions.length > 0
     ? Math.round(sessions.reduce((sum, s) => sum + (s.feedbackScore || 0), 0) / sessions.length)
     : 0
-
-  const gradeDistribution = sessions.reduce((acc, session) => {
-    const grade = session.feedbackGrade?.charAt(0) || 'N/A'
-    acc[grade] = (acc[grade] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Training Sessions</h1>
-          <p className="mt-2 text-gray-600">Welcome back, {user?.firstName || 'User'}!</p>
+          <p className="mt-2 text-gray-600">Welcome back, {home?.user?.firstName || 'User'}!</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -203,7 +204,7 @@ export default function PrototypeHome001() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500 mb-1">Total Time</div>
             <div className="text-3xl font-bold text-gray-900">
-              {Math.round(sessions.reduce((sum, s) => sum + (s.sessionDuration || 0), 0) / 60)}m
+              {Math.round(sessions.reduce((sum, s) => sum + (s.session_duration || s.sessionDuration || 0), 0) / 60)}m
             </div>
           </div>
         </div>
@@ -218,9 +219,19 @@ export default function PrototypeHome001() {
           </button>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : error ? (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <p className="text-red-500 mb-4">Failed to load training sessions.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         ) : sessions.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">

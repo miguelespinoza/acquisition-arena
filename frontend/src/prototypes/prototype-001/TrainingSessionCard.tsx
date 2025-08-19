@@ -101,7 +101,7 @@ export default function TrainingSessionCard({ session }: TrainingSessionCardProp
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-4">
             <span className="text-gray-500">
-              Duration: <span className="font-medium text-gray-900">{formatDuration(session.sessionDuration)}</span>
+              Duration: <span className="font-medium text-gray-900">{formatDuration(session.sessionDuration || session.session_duration)}</span>
             </span>
             {session.feedbackScore && (
               <span className="text-gray-500">
