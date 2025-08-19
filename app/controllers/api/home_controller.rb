@@ -24,7 +24,7 @@ class Api::HomeController < ApplicationController
     return default_statistics if sessions.empty?
     
     scores = sessions.filter_map(&:feedback_score)
-    durations = sessions.filter_map(&:session_duration)
+    durations = sessions.filter_map(&:session_duration_in_seconds)
     
     {
       total_sessions: sessions.count,

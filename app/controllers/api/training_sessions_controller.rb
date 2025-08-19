@@ -30,7 +30,7 @@ class Api::TrainingSessionsController < ApplicationController
     @training_session.update!(
       status: 'completed',
       conversation_transcript: params[:conversation_transcript],
-      session_duration: params[:session_duration],
+      session_duration_in_seconds: params[:session_duration],
       audio_url: params[:audio_url]
     )
 

@@ -4,7 +4,7 @@ class TrainingSession < ApplicationRecord
   belongs_to :parcel
   
   validates :status, inclusion: { in: %w[pending active generating_feedback completed failed] }
-  validates :session_duration, numericality: { greater_than: 0 }, allow_nil: true
+  validates :session_duration_in_seconds, numericality: { greater_than: 0 }, allow_nil: true
   
   before_validation :set_defaults
   
@@ -27,21 +27,21 @@ end
 #
 # Table name: training_sessions
 #
-#  id                         :uuid             not null, primary key
-#  audio_url                  :string
-#  conversation_transcript    :text
-#  elevenlabs_session_token   :string
-#  feedback_generated_at      :datetime
-#  feedback_score             :integer
-#  feedback_text              :text
-#  session_duration           :integer
-#  status                     :string
-#  created_at                 :datetime         not null
-#  updated_at                 :datetime         not null
-#  elevenlabs_conversation_id :string
-#  parcel_id                  :uuid             not null
-#  persona_id                 :uuid             not null
-#  user_id                    :uuid             not null
+#  id                          :uuid             not null, primary key
+#  audio_url                   :string
+#  conversation_transcript     :text
+#  elevenlabs_session_token    :string
+#  feedback_generated_at       :datetime
+#  feedback_score              :integer
+#  feedback_text               :text
+#  session_duration_in_seconds :integer
+#  status                      :string
+#  created_at                  :datetime         not null
+#  updated_at                  :datetime         not null
+#  elevenlabs_conversation_id  :string
+#  parcel_id                   :uuid             not null
+#  persona_id                  :uuid             not null
+#  user_id                     :uuid             not null
 #
 # Indexes
 #
