@@ -6,7 +6,7 @@ one:
   parcel: one
   conversation_transcript: MyText
   audio_url: MyString
-  session_duration: 1
+  session_duration_in_seconds: 1
   elevenlabs_session_token: MyString
   status: MyString
 
@@ -16,6 +16,6 @@ two:
   parcel: two
   conversation_transcript: MyText
   audio_url: MyString
-  session_duration: 1
+  session_duration_in_seconds: 1
   elevenlabs_session_token: MyString
   status: MyString
