@@ -223,6 +223,8 @@ GEM
     pg (1.6.1-x86_64-darwin)
     pg (1.6.1-x86_64-linux)
     pg (1.6.1-x86_64-linux-musl)
+    posthog-ruby (3.1.2)
+      concurrent-ruby (~> 1)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -393,6 +395,7 @@ DEPENDENCIES
   kamal
   oj
   pg (~> 1.1)
+  posthog-ruby
   puma (>= 5.0)
   rack-cors
   rails (~> 8.0.2, >= 8.0.2.1)
