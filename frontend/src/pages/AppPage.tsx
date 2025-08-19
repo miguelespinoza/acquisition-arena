@@ -2,13 +2,23 @@ import { useAuth, useUser } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 import { Phone, User, MapPin, BarChart3, MessageSquare } from 'lucide-react'
 import { useState } from 'react'
+import useSWR from 'swr'
 import { FeedbackModal } from '@/components/FeedbackModal'
+import InviteCodeModal from '@/components/InviteCodeModal'
+import { useApiClient, type UserProfile } from '@/lib/api'
+
+interface HomeData {
+  user: UserProfile
+}
 
 export default function AppPage() {
   const { signOut } = useAuth()
   const { user } = useUser()
   const navigate = useNavigate()
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const api = useApiClient()
+
+  const { data: home, error, isLoading, mutate } = useSWR<HomeData>('/home', () => api.get<HomeData>('/home'))
 
   const handleLogout = async () => {
     try {
@@ -20,6 +30,45 @@ export default function AppPage() {
 
   const handleStartNewSession = () => {
     navigate('/create-session')
+  }
+
+  const handleInviteCodeSuccess = () => {
+    mutate()
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Failed to load data</p>
+          <button 
+            onClick={() => mutate()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (home && !home.user.inviteCodeRedeemed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <InviteCodeModal onSuccess={handleInviteCodeSuccess} />
+      </div>
+    )
   }
 
   return (
@@ -34,7 +83,12 @@ export default function AppPage() {
             <div>
               <h1 className="text-xl font-bold text-gray-900">Land Acquisition Arena</h1>
               <p className="text-xs text-gray-600">
-                Hello, {user?.firstName || user?.emailAddresses[0]?.emailAddress}!
+                Hello, {user?.firstName || user?.emailAddresses[0]?.emailAddress}! 
+                {home && (
+                  <span className="ml-2 text-green-600 font-medium">
+                    {home.user.sessionsRemaining} sessions remaining
+                  </span>
+                )}
               </p>
             </div>
           </div>
