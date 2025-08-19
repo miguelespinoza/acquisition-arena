@@ -15,6 +15,38 @@ class TrainingSession < ApplicationRecord
     status == 'completed'
   end
   
+  def get_transcript(print: false)
+    return nil unless elevenlabs_conversation_id.present?
+    
+    service = ElevenLabsAgentService.new
+    result = service.get_conversation_transcript(elevenlabs_conversation_id)
+    
+    if result[:success] && result[:transcript]
+      transcript = result[:transcript]
+      
+      if print
+        puts "\n=== Transcript for Session #{id} ==="
+        
+        transcript.each do |message|
+          role = message['role'] == 'agent' ? 'ai' : 'user'
+          
+          # Get message content, fallback to tool results
+          content = message['message'] || 
+                   (message['tool_results']&.any? ? "[Tool Result: #{message['tool_results'].first['tool_name']}]" : nil)
+          
+          puts "#{role}: #{content}" if content.present?
+        end
+        puts "=== End Transcript ===\n"
+        return nil
+      end
+      
+      transcript
+    else
+      Rails.logger.error("Failed to get transcript: #{result[:error]}")
+      nil
+    end
+  end
+  
   
   private
   
