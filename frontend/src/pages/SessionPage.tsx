@@ -9,6 +9,8 @@ import { WaveformVisualizer } from '@/components/WaveformVisualizer'
 import { MicrophoneSelector } from '@/components/MicrophoneSelector'
 import { Settings, User, MapPin, BarChart3, X, PhoneOff, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { FeedbackDisplay } from '@/components/FeedbackDisplay'
+import { FeedbackModal } from '@/components/FeedbackModal'
 
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
@@ -20,10 +22,16 @@ export default function SessionPage() {
   const [microphoneConfigured, setMicrophoneConfigured] = useState(false)
   const hasAttemptedConnection = useRef(false)
 
-  // Fetch session details
-  const { data: session, error, isLoading } = useSWR<TrainingSession>(
+  // Fetch session details with polling for feedback generation
+  const { data: session, error, isLoading, mutate } = useSWR<TrainingSession>(
     id ? `/training_sessions/${id}` : null,
-    () => apiClient.get<TrainingSession>(`/training_sessions/${id}`)
+    () => apiClient.get<TrainingSession>(`/training_sessions/${id}`),
+    {
+      // Poll every 2 seconds while generating feedback
+      refreshInterval: (data) => {
+        return data?.status === 'generating_feedback' ? 2000 : 0
+      }
+    }
   )
 
   // Memoize persona avatar URL
@@ -45,17 +53,17 @@ export default function SessionPage() {
     metrics,
     cleanup
   } = useElevenLabsConversation({
+    trainingSessionId: id,
     onConnect: () => {
-      console.log('Voice conversation connected')
       setVoiceError(null)
       toast.success('Connected! Start speaking to begin the conversation.')
     },
     onDisconnect: () => {
-      console.log('Voice conversation ended')
-      toast.success('Training session completed!')
+      toast.success('Conversation ended. Generating feedback...')
+      // Refresh session data to get updated status
+      mutate()
     },
     onError: (error) => {
-      console.error('Voice conversation error:', error)
       setVoiceError(error.message)
       toast.error(error.message)
     }
@@ -67,7 +75,7 @@ export default function SessionPage() {
       hasAttemptedConnection.current = true
       // Small delay to let UI render
       const timer = setTimeout(() => {
-        startConversation(id)
+        startConversation()
       }, 1000)
       return () => {
         clearTimeout(timer)
@@ -173,8 +181,31 @@ export default function SessionPage() {
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Call Interface */}
+          {/* Call Interface or Feedback */}
           <div className="lg:col-span-2">
+            {/* Show feedback if session is completed or generating feedback */}
+            {(session?.status === 'completed' || session?.status === 'generating_feedback') ? (
+              <div className="space-y-6">
+                <FeedbackDisplay
+                  score={session.feedbackScore}
+                  grade={session.feedbackGrade}
+                  feedbackText={session.feedbackText}
+                  isGenerating={session.status === 'generating_feedback'}
+                  onRefresh={() => mutate()}
+                />
+                {/* Embedded Feedback Form - always rendered but hidden until feedback is generated */}
+                <FeedbackModal
+                  key={`feedback-${id}`}
+                  isOpen={true}
+                  onClose={() => {}}
+                  sessionId={id}
+                  embedded={true}
+                  title="How was your experience?"
+                  subtitle="Your feedback helps us improve training sessions"
+                  visible={session?.status === 'completed' && !!session?.feedbackText}
+                />
+              </div>
+            ) : (
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
               {!microphoneConfigured && session?.status === 'pending' ? (
                 <MicrophoneSelector
@@ -341,6 +372,7 @@ export default function SessionPage() {
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* Session Info Sidebar */}
