@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { MapPin } from 'lucide-react'
 import { getPersonaAvatar } from '../utils/avatar'
 import { getGradeColor } from '../utils/gradeColor'
 import type { TrainingSession } from '../types/training-session'
@@ -67,13 +68,16 @@ export default function DashboardSessionCard({ session }: DashboardSessionCardPr
 
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">Property</span>
+            <div className="flex items-center">
+              <MapPin className="w-4 h-4 mr-1 text-green-600" />
+              <span className="text-sm font-medium text-gray-600">Property</span>
+            </div>
             <span className="text-sm text-gray-900">
               {session.parcel?.parcelNumber || 'N/A'}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">Location</span>
+            <span className="text-sm font-medium text-gray-600 ml-5">Location</span>
             <span className="text-sm text-gray-900">
               {session.parcel ? `${session.parcel.city}, ${session.parcel.state}` : 'N/A'}
             </span>

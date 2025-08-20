@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { useApiClient } from '@/lib/api'
 import type { Persona, Parcel, TrainingSession } from '@/types'
 import toast from 'react-hot-toast'
-import { Phone, ChevronLeft, PlayCircle, Loader2 } from 'lucide-react'
+import { Phone, ChevronLeft, PlayCircle, Loader2, MapPin } from 'lucide-react'
 import { getPersonaAvatar } from '@/utils/avatar'
 import { track, Events, captureError } from '@/lib/logger'
 
@@ -13,19 +13,19 @@ type Step = 'persona' | 'parcel' | 'confirm'
 export default function CreateSessionPage() {
   const navigate = useNavigate()
   const apiClient = useApiClient()
-  const [currentStep, setCurrentStep] = useState<Step>('persona')
+  const [currentStep, setCurrentStep] = useState<Step>('parcel')
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null)
   const [selectedParcel, setSelectedParcel] = useState<Parcel | null>(null)
   const [isCreating, setIsCreating] = useState(false)
 
   // Fetch personas and parcels using SWR
   const { data: personas, error: personasError, isLoading: personasLoading } = useSWR<Persona[]>(
-    '/personas',
+    currentStep === 'persona' ? '/personas' : null,
     () => apiClient.get<Persona[]>('/personas')
   )
 
   const { data: parcels, error: parcelsError, isLoading: parcelsLoading } = useSWR<Parcel[]>(
-    currentStep === 'parcel' ? '/parcels' : null,
+    '/parcels',
     () => apiClient.get<Parcel[]>('/parcels')
   )
 
@@ -35,7 +35,7 @@ export default function CreateSessionPage() {
       persona_name: persona.name
     })
     setSelectedPersona(persona)
-    setCurrentStep('parcel')
+    setCurrentStep('confirm')
   }
 
   const handleParcelSelect = (parcel: Parcel) => {
@@ -46,7 +46,7 @@ export default function CreateSessionPage() {
       state: parcel.state
     })
     setSelectedParcel(parcel)
-    setCurrentStep('confirm')
+    setCurrentStep('persona')
   }
 
   const handleCreateSession = async () => {
@@ -84,12 +84,12 @@ export default function CreateSessionPage() {
   }
 
   const handleBack = () => {
-    if (currentStep === 'parcel') {
-      setCurrentStep('persona')
-      setSelectedPersona(null)
-    } else if (currentStep === 'confirm') {
+    if (currentStep === 'persona') {
       setCurrentStep('parcel')
       setSelectedParcel(null)
+    } else if (currentStep === 'confirm') {
+      setCurrentStep('persona')
+      setSelectedPersona(null)
     } else {
       navigate('/')
     }
@@ -110,11 +110,11 @@ export default function CreateSessionPage() {
             <h1 className="text-3xl font-bold text-gray-900">Create Training Session</h1>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <div className={`px-3 py-1 rounded-full ${currentStep === 'persona' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}>
-              1. Select Persona
-            </div>
             <div className={`px-3 py-1 rounded-full ${currentStep === 'parcel' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}>
-              2. Select Parcel
+              1. Select Parcel
+            </div>
+            <div className={`px-3 py-1 rounded-full ${currentStep === 'persona' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}>
+              2. Select Persona
             </div>
             <div className={`px-3 py-1 rounded-full ${currentStep === 'confirm' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'}`}>
               3. Confirm
@@ -122,10 +122,72 @@ export default function CreateSessionPage() {
           </div>
         </div>
 
-        {/* Step 1: Select Persona */}
-        {currentStep === 'persona' && (
+        {/* Step 1: Select Parcel */}
+        {currentStep === 'parcel' && (
           <div>
             <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Choose a Property Parcel</h2>
+              <p className="text-gray-600">Select the property you'd like to practice negotiating for.</p>
+            </div>
+
+            {parcelsLoading && (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-lg text-gray-600">Loading parcels...</div>
+              </div>
+            )}
+
+            {parcelsError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+                <p className="text-red-800">Failed to load parcels. Please try again.</p>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {parcels?.map((parcel) => (
+                <div
+                  key={parcel.id}
+                  onClick={() => handleParcelSelect(parcel)}
+                  className="bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                >
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="ml-3 text-xl font-semibold text-gray-900">Parcel #{parcel.parcelNumber}</h3>
+                  </div>
+                  <p className="text-gray-600 mb-4 font-medium">{parcel.city}, {parcel.state}</p>
+                  {parcel.propertyFeatures && typeof parcel.propertyFeatures === 'object' && (
+                    <div className="space-y-2">
+                      {Object.entries(parcel.propertyFeatures).slice(0, 3).map(([key, value]) => (
+                        <div key={key} className="flex justify-between text-sm">
+                          <span className="text-gray-600 capitalize">{key.replace('_', ' ')}:</span>
+                          <span className="text-gray-900 font-medium">{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Select Persona */}
+        {currentStep === 'persona' && selectedParcel && (
+          <div>
+            <div className="mb-8">
+              <div className="bg-white rounded-xl p-4 mb-6">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-gray-600">Selected Parcel:</p>
+                    <p className="font-semibold text-gray-900">#{selectedParcel.parcelNumber} - {selectedParcel.city}, {selectedParcel.state}</p>
+                  </div>
+                </div>
+              </div>
+              
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Choose Your Seller Persona</h2>
               <p className="text-gray-600">Select the type of property owner you'd like to practice negotiating with.</p>
             </div>
@@ -173,80 +235,8 @@ export default function CreateSessionPage() {
                           key={key}
                           className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
                         >
-                          {String(value)}
+                          {typeof value === 'object' ? key : String(value)}
                         </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Select Parcel */}
-        {currentStep === 'parcel' && selectedPersona && (
-          <div>
-            <div className="mb-8">
-              <div className="bg-white rounded-xl p-4 mb-6">
-                <div className="flex items-center">
-                  {getPersonaAvatar(selectedPersona.avatarUrl) ? (
-                    <img
-                      src={getPersonaAvatar(selectedPersona.avatarUrl)!}
-                      alt={selectedPersona.name}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">
-                        {selectedPersona.name.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="ml-3">
-                    <p className="text-sm text-gray-600">Selected Persona:</p>
-                    <p className="font-semibold text-gray-900">{selectedPersona.name}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Choose a Property Parcel</h2>
-              <p className="text-gray-600">Select the property you'd like to practice negotiating for.</p>
-            </div>
-
-            {parcelsLoading && (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-lg text-gray-600">Loading parcels...</div>
-              </div>
-            )}
-
-            {parcelsError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-                <p className="text-red-800">Failed to load parcels. Please try again.</p>
-              </div>
-            )}
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {parcels?.map((parcel) => (
-                <div
-                  key={parcel.id}
-                  onClick={() => handleParcelSelect(parcel)}
-                  className="bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="ml-3 text-xl font-semibold text-gray-900">Parcel #{parcel.parcelNumber}</h3>
-                  </div>
-                  <p className="text-gray-600 mb-4 font-medium">{parcel.city}, {parcel.state}</p>
-                  {parcel.propertyFeatures && typeof parcel.propertyFeatures === 'object' && (
-                    <div className="space-y-2">
-                      {Object.entries(parcel.propertyFeatures).slice(0, 3).map(([key, value]) => (
-                        <div key={key} className="flex justify-between text-sm">
-                          <span className="text-gray-600 capitalize">{key.replace('_', ' ')}:</span>
-                          <span className="text-gray-900 font-medium">{String(value)}</span>
-                        </div>
                       ))}
                     </div>
                   )}
@@ -296,7 +286,7 @@ export default function CreateSessionPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Property</h3>
                   <div className="flex items-center mb-4">
                     <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
-                      <PlayCircle className="w-8 h-8 text-white" />
+                      <MapPin className="w-8 h-8 text-white" />
                     </div>
                     <div className="ml-4">
                       <h4 className="text-xl font-semibold text-gray-900">Parcel #{selectedParcel.parcelNumber}</h4>
