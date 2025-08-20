@@ -228,18 +228,6 @@ export default function CreateSessionPage() {
                     <h3 className="ml-3 text-xl font-semibold text-gray-900">{persona.name}</h3>
                   </div>
                   <p className="text-gray-600 mb-4">{persona.description}</p>
-                  {persona.characteristics && typeof persona.characteristics === 'object' && (
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(persona.characteristics).slice(0, 3).map(([key, value]) => (
-                        <span
-                          key={key}
-                          className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-                        >
-                          {typeof value === 'object' ? key : String(value)}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

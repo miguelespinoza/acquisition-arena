@@ -419,18 +419,6 @@ export default function SessionPage() {
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">{session.persona?.description}</p>
-                {session.persona?.characteristics && typeof session.persona.characteristics === 'object' && (
-                  <div className="flex flex-wrap gap-1">
-                    {Object.entries(session.persona.characteristics).slice(0, 4).map(([key, value]) => (
-                      <span
-                        key={key}
-                        className="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-full"
-                      >
-                        {String(value)}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
