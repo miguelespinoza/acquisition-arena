@@ -1,12 +1,6 @@
-import { SignUp, useAuth } from '@clerk/clerk-react'
-import { Navigate, Link } from 'react-router-dom'
+import { SignUp } from '@clerk/clerk-react'
 
 export default function SignUpPage() {
-  const { isSignedIn } = useAuth()
-
-  if (isSignedIn) {
-    return <Navigate to="/" replace />
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -16,9 +10,8 @@ export default function SignUpPage() {
           <p className="text-gray-600 mt-2">Sign up to get started</p>
         </div>
         
-        <SignUp 
-          path="/signup"
-          routing="path"
+        <SignUp
+          routing="hash"
           signInUrl="/login"
           redirectUrl="/"
           appearance={{
@@ -28,13 +21,6 @@ export default function SignUpPage() {
             }
           }}
         />
-        
-        <div className="text-center text-sm">
-          <span className="text-gray-600">Already have an account? </span>
-          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-            Sign in
-          </Link>
-        </div>
       </div>
     </div>
   )

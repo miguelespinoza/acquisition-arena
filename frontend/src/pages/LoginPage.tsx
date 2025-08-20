@@ -1,5 +1,5 @@
 import { SignIn, useAuth } from '@clerk/clerk-react'
-import { Navigate, Link } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
 export default function LoginPage() {
   const { isSignedIn } = useAuth()
@@ -29,12 +29,6 @@ export default function LoginPage() {
           }}
         />
         
-        <div className="text-center text-sm">
-          <span className="text-gray-600">Don't have an account? </span>
-          <Link to="/signup" className="text-blue-600 hover:text-blue-800 font-medium">
-            Sign up
-          </Link>
-        </div>
       </div>
     </div>
   )
