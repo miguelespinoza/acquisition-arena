@@ -8,13 +8,33 @@ export default function Footer() {
             href="https://crafted.app/ai" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            className="flex items-center space-x-2 hover:text-blue-600 transition-colors group"
+            onMouseEnter={(e) => {
+              const svgDiv = e.currentTarget.querySelector('[data-svg-container]') as HTMLDivElement
+              if (svgDiv) {
+                svgDiv.style.filter = 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(220deg) brightness(104%) contrast(97%)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              const svgDiv = e.currentTarget.querySelector('[data-svg-container]') as HTMLDivElement
+              if (svgDiv) {
+                svgDiv.style.filter = 'none'
+              }
+            }}
           >
-            <img 
-              src="/mobile-planet.svg" 
-              alt="Crafted AI" 
-              className="w-[28px] h-[20px]"
-            />
+            <div 
+              data-svg-container
+              className="w-[28px] h-[20px] transition-all"
+              style={{
+                filter: 'none'
+              }}
+            >
+              <img 
+                src="/mobile-planet.svg" 
+                alt="Crafted AI" 
+                className="w-full h-full"
+              />
+            </div>
             <span 
               className="text-sm font-medium"
               style={{ fontFamily: "'Atkinson Hyperlegible Mono', monospace" }}
