@@ -91,26 +91,10 @@ export default function SessionPage() {
     }
   }, [cleanup])
 
-  const handleEndSession = useCallback(async () => {
-    if (session?.status === 'completed') {
-      // If session is already completed, just navigate to dashboard
-      navigate('/')
-    } else if (conversationStatus === 'connected') {
-      const confirmed = window.confirm(
-        'Are you sure you want to end this training session? Your progress will be saved.'
-      )
-      if (!confirmed) return
-      
-      track(Events.TRAINING_SESSION_ENDED, {
-        session_id: id,
-        persona_id: session?.persona?.id,
-        parcel_id: session?.parcel?.id
-      })
-      await endConversation()
-    } else {
-      navigate('/')
-    }
-  }, [conversationStatus, endConversation, navigate, session?.status, id, session?.persona?.id, session?.parcel?.id])
+  const handleEndSession = useCallback(() => {
+    // Only used for navigating to dashboard when session is completed
+    navigate('/')
+  }, [navigate])
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     setVolume(newVolume)
@@ -181,12 +165,25 @@ export default function SessionPage() {
               <p className="text-sm text-gray-600">Session ID: {session.id}</p>
             </div>
           </div>
+          {/* NOTE: End Session button temporarily removed to prevent backend crashes on early termination.
+              Early session ending causes validation errors when session_duration_in_seconds is 0 or null.
+              Sessions should end naturally when conversations conclude to ensure proper feedback generation. */}
+          {session?.status === 'completed' && (
+            <button
+              onClick={handleEndSession}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
+            >
+              Go to Dashboard
+            </button>
+          )}
+          {/* 
           <button
             onClick={handleEndSession}
             className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
           >
             {session?.status === 'completed' ? 'Go to Dashboard' : 'End Session'}
           </button>
+          */}
         </div>
 
         {/* Main Content */}
