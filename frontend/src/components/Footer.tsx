@@ -11,7 +11,7 @@ export default function Footer() {
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
             <img 
-              src="/mobile-planet.png" 
+              src="/mobile-planet.svg" 
               alt="Crafted AI" 
               className="w-[28px] h-[20px]"
             />
