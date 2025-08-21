@@ -11,6 +11,7 @@ Rails.application.routes.draw do
     # User endpoints
     get 'user', to: 'users#profile'
     post 'user/validate_invite', to: 'users#validate_invite'
+    post 'user/request_more_sessions', to: 'users#request_more_sessions'
     
     # Session setup endpoints
     resources :personas, only: [:index]

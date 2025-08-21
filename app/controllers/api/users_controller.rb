@@ -45,4 +45,32 @@ class Api::UsersController < ApplicationController
       render json: { valid: false, error: 'Invalid invite code' }, status: :unprocessable_entity
     end
   end
+
+  def request_more_sessions
+    user_email = params[:email]
+    message = params[:message] || "Love the platform, ready for more sessions!"
+    
+    if user_email.blank?
+      render json: { error: 'Email is required' }, status: :unprocessable_entity
+      return
+    end
+
+    # Send Slack notification
+    slack_service = SlackNotificationService.new
+    success = slack_service.send_more_sessions_request(
+      user_email: user_email,
+      user: current_user,
+      message: message,
+      sessions_completed: current_user.training_sessions.where(status: 'completed').count
+    )
+
+    if success
+      render json: { message: "Thank you for your interest! We'll respond within a couple of hours." }
+    else
+      render json: { error: 'Failed to send request. Please try again.' }, status: :internal_server_error
+    end
+  rescue StandardError => e
+    Rails.logger.error "Failed to send more sessions request: #{e.message}"
+    render json: { error: 'Failed to send request. Please try again.' }, status: :internal_server_error
+  end
 end

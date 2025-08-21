@@ -10,7 +10,11 @@ export default function DashboardEmptyState({ userName, sessionsRemaining }: Das
   const navigate = useNavigate()
 
   const handleStartNewSession = () => {
-    navigate('/create-session')
+    if (sessionsRemaining === 0) {
+      navigate('/request-more-sessions')
+    } else {
+      navigate('/create-session')
+    }
   }
 
   return (
@@ -23,20 +27,26 @@ export default function DashboardEmptyState({ userName, sessionsRemaining }: Das
       {/* Call-to-Action */}
       <div className="bg-white rounded-2xl shadow-xl p-16 text-center mb-8">
         <h3 className="text-4xl font-bold text-gray-900 mb-3">
-          Ready to Start Training?
+          {sessionsRemaining === 0 ? 'Ready for More Sessions?' : 'Ready to Start Training?'}
         </h3>
         
         <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-          Perfect for beginner investors just getting started. Get those reps in and 
-          build confidence through realistic AI-powered roleplay sessions.
+          {sessionsRemaining === 0 
+            ? 'You\'ve completed your initial sessions! Ready to continue your land acquisition training with more practice sessions?'
+            : 'Perfect for beginner investors just getting started. Get those reps in and build confidence through realistic AI-powered roleplay sessions.'
+          }
         </p>
         
         <button
           onClick={handleStartNewSession}
-          className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold text-lg rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+          className={`inline-flex items-center px-8 py-4 ${
+            sessionsRemaining === 0 
+              ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+              : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+          } text-white font-semibold text-lg rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg`}
         >
           <Phone className="w-6 h-6 mr-2" fill="white" strokeWidth={0} />
-          Start New Session
+          {sessionsRemaining === 0 ? 'Request More Sessions' : 'Start New Session'}
         </button>
       </div>
 

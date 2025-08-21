@@ -89,12 +89,21 @@ export default function Dashboard({ trainingSessions, statistics, userName, sess
       {/* Sessions Header */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Training Sessions</h2>
-        <button
-          onClick={() => navigate('/create-session')}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
-        >
-          Start New Session
-        </button>
+        {sessionsRemaining === 0 ? (
+          <button
+            onClick={() => navigate('/request-more-sessions')}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
+          >
+            Request More Sessions
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/create-session')}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
+          >
+            Start New Session
+          </button>
+        )}
       </div>
 
       {/* Sessions Grid */}

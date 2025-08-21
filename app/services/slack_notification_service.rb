@@ -16,6 +16,16 @@ class SlackNotificationService
     false
   end
 
+  def send_more_sessions_request(user_email:, user:, message:, sessions_completed:)
+    return false if @webhook_url.blank?
+
+    slack_message = build_more_sessions_message(user_email, user, message, sessions_completed)
+    send_to_slack(slack_message)
+  rescue StandardError => e
+    Rails.logger.error "Failed to send Slack notification: #{e.message}"
+    false
+  end
+
   private
 
   def build_feedback_message(feedback, user, training_session)
@@ -104,6 +114,63 @@ class SlackNotificationService
         }
       ]
     }
+
+    { blocks: blocks }
+  end
+
+  def build_more_sessions_message(user_email, user, message, sessions_completed)
+    blocks = [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "🚀 More Sessions Request",
+          emoji: true
+        }
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: "*User Email:*\n#{user_email}"
+          },
+          {
+            type: "mrkdwn",
+            text: "*User ID:*\n#{user.clerk_user_id}"
+          }
+        ]
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: "*Sessions Completed:*\n#{sessions_completed}"
+          },
+          {
+            type: "mrkdwn",
+            text: "*Current Sessions Remaining:*\n#{user.sessions_remaining}"
+          }
+        ]
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "*Message:*\n#{message}"
+        }
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "Submitted at #{Time.current.strftime('%B %d, %Y at %I:%M %p %Z')}"
+          }
+        ]
+      }
+    ]
 
     { blocks: blocks }
   end

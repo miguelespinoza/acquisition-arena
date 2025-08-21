@@ -6,6 +6,7 @@ import SignUpPage from './pages/SignUpPage'
 import HomePage from './pages/HomePage'
 import CreateSessionPage from './pages/CreateSessionPage'
 import SessionPage from './pages/SessionPage'
+import RequestMoreSessionsPage from './pages/RequestMoreSessionsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PrototypeHome001 from './prototypes/prototype-001/PrototypeHome001'
 import { useLoggerUser, initializeLogger } from './lib/logger'
@@ -44,6 +45,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SessionPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/request-more-sessions" 
+            element={
+              <ProtectedRoute>
+                <RequestMoreSessionsPage />
               </ProtectedRoute>
             } 
           />
