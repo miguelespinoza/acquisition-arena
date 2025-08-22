@@ -340,7 +340,7 @@ export default function SessionPage() {
                   </div>
                   
                   {/* End Call Button */}
-                  <div className="flex justify-center mt-8">
+                  {/* <div className="flex justify-center mt-8">
                     <button 
                       onClick={handleEndSession}
                       className="p-4 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors group cursor-pointer"
@@ -348,7 +348,7 @@ export default function SessionPage() {
                     >
                       <PhoneOff className="w-6 h-6" />
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               ) : voiceError ? (
                 <div className="space-y-6">
